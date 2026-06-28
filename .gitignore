@@ -1,0 +1,31 @@
+# Claude
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+backend/venv/
+backend/.env
+*.egg-info/
+dist/
+build/
+
+# Node
+frontend-web/node_modules/
+frontend-web/dist/
+frontend-app/node_modules/
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
