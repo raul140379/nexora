@@ -19,7 +19,7 @@ export function Login() {
       localStorage.setItem('access_token', res.access_token)
       localStorage.setItem('refresh_token', res.refresh_token)
       setTokens(res.access_token, res.refresh_token)
-      setUser({ id: 0, email, username: '', full_name: '', is_active: true, created_at: '', updated_at: '' })
+      setUser({ id: 0, email, username: '', full_name: '', role: 'vendedor', is_active: true, created_at: '', updated_at: '' })
       navigate('/', { replace: true })
       authApi.getCurrentUser().then(setUser).catch(() => {})
     } catch {
