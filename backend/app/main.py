@@ -39,7 +39,7 @@ async def health_check():
 
 
 # ── Servir frontend React (producción) ────────────────────────────────────────
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "static")
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "static")
 
 if os.path.exists(STATIC_DIR):
     assets_dir = os.path.join(STATIC_DIR, "assets")
