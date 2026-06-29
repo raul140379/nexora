@@ -1,104 +1,76 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-// import { useNavigation } from '@react-navigation/native';
-// import { authApi } from '../services/auth.api';
+import React, { useState } from 'react'
+import {
+  View, Text, TextInput, TouchableOpacity,
+  StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform
+} from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { authApi } from '../services/auth.api'
+import { useAuthStore } from '../store/auth.store'
 
-export const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  // const navigation = useNavigation();
+export function LoginScreen({ navigation }: any) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { setTokens, setUser } = useAuthStore()
 
   const handleLogin = async () => {
-    setLoading(true);
-    setError('');
-
+    if (!email || !password) { Alert.alert('Error', 'Completá todos los campos'); return }
+    setLoading(true)
     try {
-      // const response = await authApi.login({ email, password });
-      // await AsyncStorage.setItem('access_token', response.access_token);
-      // await AsyncStorage.setItem('refresh_token', response.refresh_token);
-      // navigation.navigate('Home');
+      const res = await authApi.login({ email, password })
+      await AsyncStorage.setItem('access_token', res.access_token)
+      await AsyncStorage.setItem('refresh_token', res.refresh_token)
+      setTokens(res.access_token, res.refresh_token)
+      const user = await authApi.getCurrentUser()
+      setUser(user)
     } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+      Alert.alert('Error', err.response?.data?.detail || 'Email o contraseña incorrectos')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Iniciar Sesión</Text>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={styles.card}>
+        <Text style={styles.brand}>Nexora</Text>
+        <Text style={styles.subtitle}>Sistema de Ventas</Text>
 
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#9ca3af"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          editable={!loading}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          placeholderTextColor="#9ca3af"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          editable={!loading}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        editable={!loading}
-        keyboardType="email-address"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        editable={!loading}
-      />
-
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? 'Cargando...' : 'Iniciar Sesión'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+        <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleLogin} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Iniciar sesión</Text>}
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
+  )
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 8,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-});
+  container: { flex: 1, backgroundColor: '#f3f4f6', justifyContent: 'center', padding: 24 },
+  card: { backgroundColor: '#fff', borderRadius: 16, padding: 28, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
+  brand: { fontSize: 32, fontWeight: '800', color: '#1d4ed8', textAlign: 'center', marginBottom: 4 },
+  subtitle: { fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 28 },
+  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, padding: 14, marginBottom: 12, fontSize: 15, color: '#111827', backgroundColor: '#f9fafb' },
+  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 15, alignItems: 'center', marginTop: 4 },
+  btnDisabled: { opacity: 0.6 },
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+})
