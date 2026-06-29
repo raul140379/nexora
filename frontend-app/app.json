@@ -36,6 +36,9 @@
       ]
     ],
     "scheme": "nexora",
+    "experiments": {
+      "newArchEnabled": false
+    },
     "extra": {
       "eas": {
         "projectId": "19d258d4-4130-40d5-b032-606eab9bb898"
