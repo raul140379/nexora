@@ -1,18 +1,68 @@
-import { View, Text, StyleSheet } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { NavigationContainer } from '@react-navigation/native'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { View, ActivityIndicator } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useAuthStore } from './src/store/auth.store'
+import { authApi } from './src/services/auth.api'
+import { LoginScreen } from './src/screens/LoginScreen'
+import { HomeScreen } from './src/screens/HomeScreen'
+import { ProductsScreen } from './src/screens/ProductsScreen'
+import { SalesScreen } from './src/screens/SalesScreen'
+
+const Stack = createNativeStackNavigator()
 
 export default function App() {
+  const { setUser, setTokens, isAuthenticated } = useAuthStore()
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const token = await AsyncStorage.getItem('access_token')
+        if (token) {
+          setTokens(token, '')
+          const user = await authApi.getCurrentUser()
+          setUser(user)
+        }
+      } catch {
+        // sin sesión previa
+      } finally {
+        setReady(true)
+      }
+    }
+    init()
+  }, [])
+
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1e40af' }}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    )
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Nexora</Text>
-      <Text style={styles.sub}>Sistema de Ventas</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <StatusBar style="light" />
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: { backgroundColor: '#1e40af' },
+          headerTintColor: '#fff',
+          headerTitleStyle: { fontWeight: '700' },
+        }}
+      >
+        {!isAuthenticated ? (
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        ) : (
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Products" component={ProductsScreen} options={{ title: 'Productos' }} />
+            <Stack.Screen name="Sales" component={SalesScreen} options={{ title: 'Nueva Venta' }} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   )
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1e40af' },
-  title: { color: '#fff', fontSize: 36, fontWeight: '800' },
-  sub: { color: '#93c5fd', fontSize: 16, marginTop: 8 },
-})
