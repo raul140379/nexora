@@ -21,6 +21,7 @@
         "backgroundColor": "#1e40af"
       },
       "package": "com.nexora.app",
+      "jsEngine": "jsc",
       "permissions": [
         "CAMERA",
         "android.permission.CAMERA",
