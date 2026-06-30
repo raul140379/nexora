@@ -10,11 +10,11 @@ import { useAuthStore } from '../store/auth.store'
 interface PackPrice { id: number; pack_name: string; price_a: number; price_b: number | null; price_c: number | null; stock: number }
 interface Category { id: number; name: string }
 interface Subcategory { id: number; name: string; category_id: number }
-interface Product { id: number; name: string; sku: string | null; prices: PackPrice[]; category: Category | null; subcategory: Subcategory | null }
+interface Product { id: number; name: string; sku: string | null; description: string | null; prices: PackPrice[]; category: Category | null; subcategory: Subcategory | null }
 
 interface PackForm { pack_name: string; units_per_pack: string; price_a: string; price_b: string; price_c: string; stock: string }
 
-const EMPTY_FORM = { name: '', sku: '', category_id: '', subcategory_id: '' }
+const EMPTY_FORM = { name: '', sku: '', description: '', category_id: '', subcategory_id: '' }
 const EMPTY_PACK: PackForm = { pack_name: '', units_per_pack: '1', price_a: '', price_b: '', price_c: '', stock: '0' }
 const fmt = (v: number | null) => v != null ? `$${Number(v).toFixed(2)}` : '—'
 
@@ -28,6 +28,8 @@ export function ProductsScreen() {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [filterCatId, setFilterCatId] = useState('')
+  const [filterSubId, setFilterSubId] = useState('')
 
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -79,9 +81,14 @@ export function ProductsScreen() {
 
   useEffect(() => { load() }, [])
 
+  const filterSubs = subcategories.filter(s => !filterCatId || s.category_id === Number(filterCatId))
+
   const filtered = products.filter(p => {
     const q = search.toLowerCase()
-    return p.name.toLowerCase().includes(q) || (p.sku ?? '').toLowerCase().includes(q)
+    const matchText = !q || p.name.toLowerCase().includes(q) || (p.sku ?? '').toLowerCase().includes(q)
+    const matchCat = !filterCatId || p.category?.id === Number(filterCatId)
+    const matchSub = !filterSubId || p.subcategory?.id === Number(filterSubId)
+    return matchText && matchCat && matchSub
   })
 
   const filteredSubs = subcategories.filter(s => !form.category_id || s.category_id === Number(form.category_id))
@@ -96,7 +103,7 @@ export function ProductsScreen() {
   const openEdit = (p: Product) => {
     setEditingId(p.id)
     setForm({
-      name: p.name, sku: p.sku ?? '',
+      name: p.name, sku: p.sku ?? '', description: p.description ?? '',
       category_id: p.category ? String(p.category.id) : '',
       subcategory_id: p.subcategory ? String(p.subcategory.id) : '',
     })
@@ -116,6 +123,7 @@ export function ProductsScreen() {
     setSaving(true)
     const payload = {
       name: form.name.trim(), sku: form.sku.trim() || null,
+      description: form.description.trim() || null,
       category_id: form.category_id ? Number(form.category_id) : null,
       subcategory_id: form.subcategory_id ? Number(form.subcategory_id) : null,
       prices: packs.map(pk => ({
@@ -179,6 +187,42 @@ export function ProductsScreen() {
         )}
       </View>
 
+      {/* Filtro por categoría */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar}>
+        <View style={styles.chipRow}>
+          <TouchableOpacity style={[styles.chip, !filterCatId && styles.chipActive]}
+            onPress={() => { setFilterCatId(''); setFilterSubId('') }}>
+            <Text style={[styles.chipText, !filterCatId && { color: '#fff' }]}>Todas</Text>
+          </TouchableOpacity>
+          {categories.map(c => (
+            <TouchableOpacity key={c.id}
+              style={[styles.chip, filterCatId === String(c.id) && styles.chipActive]}
+              onPress={() => { setFilterCatId(String(c.id)); setFilterSubId('') }}>
+              <Text style={[styles.chipText, filterCatId === String(c.id) && { color: '#fff' }]}>{c.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Filtro por subcategoría */}
+      {filterCatId && filterSubs.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.filterBar, { marginTop: 0 }]}>
+          <View style={styles.chipRow}>
+            <TouchableOpacity style={[styles.chip, !filterSubId && styles.chipActive]}
+              onPress={() => setFilterSubId('')}>
+              <Text style={[styles.chipText, !filterSubId && { color: '#fff' }]}>Todas</Text>
+            </TouchableOpacity>
+            {filterSubs.map(s => (
+              <TouchableOpacity key={s.id}
+                style={[styles.chip, filterSubId === String(s.id) && styles.chipActive]}
+                onPress={() => setFilterSubId(String(s.id))}>
+                <Text style={[styles.chipText, filterSubId === String(s.id) && { color: '#fff' }]}>{s.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      )}
+
       {loading ? (
         <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
       ) : (
@@ -193,7 +237,8 @@ export function ProductsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.productName}>{p.name}</Text>
                   {p.sku && <Text style={styles.sku}>{p.sku}</Text>}
-                  {p.category && <Text style={styles.category}>{p.category.name}</Text>}
+                  {p.category && <Text style={styles.category}>{p.category.name}{p.subcategory ? ` › ${p.subcategory.name}` : ''}</Text>}
+                  {p.description && <Text style={styles.description}>{p.description}</Text>}
                 </View>
                 {canEdit && (
                   <View style={styles.cardActions}>
@@ -292,6 +337,12 @@ export function ProductsScreen() {
             <TextInput style={styles.input} value={form.name} onChangeText={t => setForm(p => ({ ...p, name: t }))}
               placeholder="Nombre del producto" placeholderTextColor="#9ca3af" />
 
+            <Text style={styles.label}>Descripción</Text>
+            <TextInput style={[styles.input, { minHeight: 70, textAlignVertical: 'top' }]}
+              value={form.description} onChangeText={t => setForm(p => ({ ...p, description: t }))}
+              placeholder="Descripción opcional del producto" placeholderTextColor="#9ca3af"
+              multiline numberOfLines={3} />
+
             <View style={styles.packHeader}>
               <Text style={styles.label}>Empaques y precios</Text>
               <TouchableOpacity onPress={() => setPacks(p => [...p, { ...EMPTY_PACK }])}>
@@ -388,6 +439,8 @@ export function ProductsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6' },
   topBar: { flexDirection: 'row', padding: 12, gap: 8, alignItems: 'center' },
+  filterBar: { paddingHorizontal: 12, paddingBottom: 8 },
+  description: { fontSize: 11, color: '#9ca3af', marginTop: 2, fontStyle: 'italic' },
   searchInput: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
   addBtn: { backgroundColor: '#2563eb', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
   addBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },

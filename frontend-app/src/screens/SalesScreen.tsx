@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator, Modal } from 'react-native'
+import { CameraView, useCameraPermissions } from 'expo-camera'
 import { api } from '../services/api'
 
 interface PackPrice { id: number; pack_name: string; price_a: number; price_b: number | null; price_c: number | null; stock: number }
@@ -21,6 +22,8 @@ export function SalesScreen() {
   const [selTier, setSelTier] = useState<Tier>('a')
   const [qty, setQty] = useState('1')
   const [showResults, setShowResults] = useState(false)
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions()
 
   useEffect(() => { api.get('/products').then(r => setProducts(r.data)) }, [])
   useEffect(() => {
@@ -28,6 +31,24 @@ export function SalesScreen() {
     else setSelPack(null)
     setSelTier('a'); setQty('1')
   }, [selProduct])
+
+  const openScanner = async () => {
+    if (!cameraPermission?.granted) {
+      const result = await requestCameraPermission()
+      if (!result.granted) { Alert.alert('Sin permiso', 'Necesitás permitir el acceso a la cámara'); return }
+    }
+    setScannerOpen(true)
+  }
+
+  const handleBarcodeScan = ({ data }: { data: string }) => {
+    setScannerOpen(false)
+    const exact = products.find(p => p.sku === data)
+    if (exact) {
+      setSelProduct(exact); setSearch(exact.name); setShowResults(false)
+    } else {
+      setSearch(data); setShowResults(true)
+    }
+  }
 
   const filtered = search.trim().length >= 1
     ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || (p.sku ?? '').includes(search)).slice(0, 6)
@@ -74,9 +95,14 @@ export function SalesScreen() {
       {/* Buscar producto */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Agregar producto</Text>
-        <TextInput style={styles.searchInput} placeholder="Buscar por nombre o código..."
-          placeholderTextColor="#9ca3af" value={search}
-          onChangeText={t => { setSearch(t); setShowResults(true); if (!t) setSelProduct(null) }} />
+        <View style={styles.searchRow}>
+          <TextInput style={[styles.searchInput, { flex: 1 }]} placeholder="Buscar por nombre o código..."
+            placeholderTextColor="#9ca3af" value={search}
+            onChangeText={t => { setSearch(t); setShowResults(true); if (!t) setSelProduct(null) }} />
+          <TouchableOpacity style={styles.scanBtn} onPress={openScanner}>
+            <Text style={styles.scanBtnText}>📷</Text>
+          </TouchableOpacity>
+        </View>
 
         {showResults && filtered.length > 0 && (
           <View style={styles.results}>
@@ -175,6 +201,23 @@ export function SalesScreen() {
           {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Confirmar venta · ${total.toFixed(2)}</Text>}
         </TouchableOpacity>
       </View>
+      <Modal visible={scannerOpen} animationType="slide" onRequestClose={() => setScannerOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+          <CameraView
+            style={{ flex: 1 }}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ['qr', 'ean13', 'ean8', 'code128', 'code39', 'upc_a', 'upc_e'] }}
+            onBarcodeScanned={handleBarcodeScan}
+          />
+          <View style={styles.scanOverlay}>
+            <View style={styles.scanFrame} />
+            <Text style={styles.scanHint}>Apuntá la cámara al código del producto</Text>
+            <TouchableOpacity style={styles.scanCloseBtn} onPress={() => setScannerOpen(false)}>
+              <Text style={styles.scanCloseBtnText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   )
 }
@@ -183,7 +226,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6' },
   section: { backgroundColor: '#fff', margin: 12, borderRadius: 14, padding: 14, elevation: 2 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 },
+  searchRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   searchInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
+  scanBtn: { backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 10, padding: 10, alignItems: 'center', justifyContent: 'center' },
+  scanBtnText: { fontSize: 20 },
+  scanOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  scanFrame: { width: 260, height: 160, borderWidth: 3, borderColor: '#fff', borderRadius: 12, marginBottom: 24 },
+  scanHint: { color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 32, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  scanCloseBtn: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 32, paddingVertical: 12 },
+  scanCloseBtnText: { color: '#111827', fontWeight: '700', fontSize: 15 },
   results: { marginTop: 4, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, overflow: 'hidden' },
   resultItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   resultName: { fontSize: 14, fontWeight: '600', color: '#111827' },
