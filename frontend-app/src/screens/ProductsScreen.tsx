@@ -188,8 +188,8 @@ export function ProductsScreen() {
       </View>
 
       {/* Filtro por categoría */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar}>
-        <View style={styles.chipRow}>
+      <View style={styles.filterBar}>
+        <View style={styles.chipWrap}>
           <TouchableOpacity style={[styles.chip, !filterCatId && styles.chipActive]}
             onPress={() => { setFilterCatId(''); setFilterSubId('') }}>
             <Text style={[styles.chipText, !filterCatId && { color: '#fff' }]}>Todas</Text>
@@ -202,12 +202,12 @@ export function ProductsScreen() {
             </TouchableOpacity>
           ))}
         </View>
-      </ScrollView>
+      </View>
 
       {/* Filtro por subcategoría */}
       {filterCatId && filterSubs.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.filterBar, { marginTop: 0 }]}>
-          <View style={styles.chipRow}>
+        <View style={[styles.filterBar, { marginTop: 0 }]}>
+          <View style={styles.chipWrap}>
             <TouchableOpacity style={[styles.chip, !filterSubId && styles.chipActive]}
               onPress={() => setFilterSubId('')}>
               <Text style={[styles.chipText, !filterSubId && { color: '#fff' }]}>Todas</Text>
@@ -220,7 +220,7 @@ export function ProductsScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        </ScrollView>
+        </View>
       )}
 
       {loading ? (
@@ -288,36 +288,32 @@ export function ProductsScreen() {
             </View>
 
             <Text style={styles.label}>Categoría</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
-              <View style={styles.chipRow}>
-                <TouchableOpacity style={[styles.chip, !form.category_id && styles.chipActive]}
-                  onPress={() => setForm(p => ({ ...p, category_id: '', subcategory_id: '' }))}>
-                  <Text style={[styles.chipText, !form.category_id && { color: '#fff' }]}>Todas</Text>
+            <View style={styles.chipWrap}>
+              <TouchableOpacity style={[styles.chip, !form.category_id && styles.chipActive]}
+                onPress={() => setForm(p => ({ ...p, category_id: '', subcategory_id: '' }))}>
+                <Text style={[styles.chipText, !form.category_id && { color: '#fff' }]}>Ninguna</Text>
+              </TouchableOpacity>
+              {categories.map(c => (
+                <TouchableOpacity key={c.id}
+                  style={[styles.chip, form.category_id === String(c.id) && styles.chipActive]}
+                  onPress={() => setForm(p => ({ ...p, category_id: String(c.id), subcategory_id: '' }))}>
+                  <Text style={[styles.chipText, form.category_id === String(c.id) && { color: '#fff' }]}>{c.name}</Text>
                 </TouchableOpacity>
-                {categories.map(c => (
-                  <TouchableOpacity key={c.id}
-                    style={[styles.chip, form.category_id === String(c.id) && styles.chipActive]}
-                    onPress={() => setForm(p => ({ ...p, category_id: String(c.id), subcategory_id: '' }))}>
-                    <Text style={[styles.chipText, form.category_id === String(c.id) && { color: '#fff' }]}>{c.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
+              ))}
+            </View>
 
             {form.category_id && filteredSubs.length > 0 && (
               <>
                 <Text style={styles.label}>Subcategoría</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 6 }}>
-                  <View style={styles.chipRow}>
-                    {filteredSubs.map(s => (
-                      <TouchableOpacity key={s.id}
-                        style={[styles.chip, form.subcategory_id === String(s.id) && styles.chipActive]}
-                        onPress={() => setForm(p => ({ ...p, subcategory_id: String(s.id) }))}>
-                        <Text style={[styles.chipText, form.subcategory_id === String(s.id) && { color: '#fff' }]}>{s.name}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </ScrollView>
+                <View style={styles.chipWrap}>
+                  {filteredSubs.map(s => (
+                    <TouchableOpacity key={s.id}
+                      style={[styles.chip, form.subcategory_id === String(s.id) && styles.chipActive]}
+                      onPress={() => setForm(p => ({ ...p, subcategory_id: String(s.id) }))}>
+                      <Text style={[styles.chipText, form.subcategory_id === String(s.id) && { color: '#fff' }]}>{s.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </>
             )}
 
@@ -472,7 +468,8 @@ const styles = StyleSheet.create({
   input: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
   smallInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 8, fontSize: 13, color: '#111827', textAlign: 'center' },
   chipRow: { flexDirection: 'row', gap: 6, paddingVertical: 2 },
-  chip: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4, marginBottom: 4 },
+  chip: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, minWidth: 64, alignItems: 'center' },
   chipActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
   chipText: { fontSize: 12, fontWeight: '600', color: '#374151' },
   packHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 },

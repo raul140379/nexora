@@ -35,6 +35,7 @@ export function HomeScreen({ navigation }: any) {
     { label: 'Nueva venta', screen: 'Sales', color: '#2563eb', roles: ['admin', 'ejecutivo', 'vendedor'] },
     { label: 'Productos', screen: 'Products', color: '#0891b2', roles: ['admin', 'ejecutivo', 'vendedor'] },
     { label: 'Clientes', screen: 'Customers', color: '#16a34a', roles: ['admin', 'ejecutivo'] },
+    { label: 'Categorías', screen: 'Categories', color: '#d97706', roles: ['admin', 'ejecutivo'] },
     { label: 'Usuarios', screen: 'Users', color: '#7c3aed', roles: ['admin'] },
   ]
 

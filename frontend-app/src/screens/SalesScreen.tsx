@@ -120,7 +120,7 @@ export function SalesScreen() {
           <View style={{ marginTop: 12 }}>
             {/* Empaques */}
             <Text style={styles.label}>Empaque</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+            <View style={styles.chipWrap}>
               {selProduct.prices.map(pr => (
                 <TouchableOpacity key={pr.id}
                   style={[styles.chip, selPack.id === pr.id && styles.chipActive]}
@@ -131,7 +131,7 @@ export function SalesScreen() {
                   </Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
 
             {selPack.stock === 0 && (
               <View style={styles.alertRed}><Text style={{ color: '#dc2626', fontWeight: '600' }}>⛔ Sin stock para {selPack.pack_name}</Text></View>
@@ -227,6 +227,7 @@ const styles = StyleSheet.create({
   section: { backgroundColor: '#fff', margin: 12, borderRadius: 14, padding: 14, elevation: 2 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 },
   searchRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4 },
   searchInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
   scanBtn: { backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 10, padding: 10, alignItems: 'center', justifyContent: 'center' },
   scanBtnText: { fontSize: 20 },
