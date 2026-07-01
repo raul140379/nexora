@@ -40,6 +40,9 @@ export function Users() {
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [resetPwUser, setResetPwUser] = useState<UserData | null>(null)
+  const [newPw, setNewPw] = useState('')
+  const [resetting, setResetting] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -98,6 +101,21 @@ export function Users() {
     } finally { setDeleting(false) }
   }
 
+  const handleResetPw = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetPwUser) return
+    if (newPw.length < 6) { toast.error('Mínimo 6 caracteres'); return }
+    setResetting(true)
+    try {
+      await api.post(`/users/${resetPwUser.id}/reset-password`, { new_password: newPw })
+      toast.success(`Contraseña de ${resetPwUser.full_name || resetPwUser.username} reseteada`)
+      setResetPwUser(null)
+      setNewPw('')
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Error al resetear')
+    } finally { setResetting(false) }
+  }
+
   if (loading) return <div className="p-8 text-[#6B7280]">Cargando...</div>
 
   return (
@@ -144,6 +162,10 @@ export function Users() {
                     <button onClick={() => openEdit(u)}
                       className="text-xs bg-[#172A46] hover:bg-[#D4AF37]/10 hover:text-[#D4AF37] text-gray-400 px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
                       Editar
+                    </button>
+                    <button onClick={() => { setResetPwUser(u); setNewPw('') }}
+                      className="text-xs bg-[#172A46] hover:bg-blue-900/30 hover:text-blue-300 text-gray-400 px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
+                      Reset PW
                     </button>
                     <button onClick={() => setDeleteId(u.id)}
                       className="text-xs bg-red-900/20 hover:bg-red-900/40 text-red-400 px-3 py-1.5 rounded-lg border border-red-800/30 transition-colors">
@@ -242,6 +264,44 @@ export function Users() {
                 <button type="submit" disabled={saving}
                   className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50">
                   {saving ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear usuario'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal reset contraseña */}
+      {resetPwUser && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-[#243D66] rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base font-semibold text-gray-100">Resetear contraseña</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{resetPwUser.full_name || resetPwUser.username} · {resetPwUser.email}</p>
+              </div>
+              <button onClick={() => setResetPwUser(null)} className="text-gray-400 hover:text-gray-200 text-xl">&times;</button>
+            </div>
+            <form onSubmit={handleResetPw} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5 uppercase tracking-wider">Nueva contraseña</label>
+                <input
+                  type="password"
+                  value={newPw}
+                  onChange={e => setNewPw(e.target.value)}
+                  required autoFocus
+                  placeholder="Mínimo 6 caracteres"
+                  className="w-full bg-[#172A46] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setResetPwUser(null)}
+                  className="flex-1 border border-white/10 text-gray-300 text-sm font-medium py-2.5 rounded-lg hover:bg-[#1E3557] transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={resetting}
+                  className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50 transition-colors">
+                  {resetting ? 'Reseteando...' : 'Resetear'}
                 </button>
               </div>
             </form>

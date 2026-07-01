@@ -7,6 +7,7 @@ import app.models.product  # noqa
 import app.models.product_price  # noqa
 import app.models.customer  # noqa
 import app.models.sale  # noqa
+import app.models.permission  # noqa
 
 
 def init_db():

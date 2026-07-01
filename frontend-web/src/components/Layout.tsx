@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { to: '/customers',  label: 'Clientes',   icon: '◎',              roles: ['admin', 'ejecutivo'] },
   { to: '/categories', label: 'Categorías', icon: '◇',              roles: ['admin', 'ejecutivo'] },
   { to: '/users',         label: 'Usuarios',      icon: '◉',              roles: ['admin'] },
+  { to: '/permissions',   label: 'Permisos',      icon: '◐',              roles: ['admin'] },
   { to: '/design-system', label: 'Design System', icon: '◈',              roles: ['admin'] },
 ]
 

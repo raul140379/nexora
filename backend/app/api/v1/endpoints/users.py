@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.api.v1.deps import get_db, get_current_admin, get_current_user
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 from app.models.user import User
 from app.repositories.user_repo import user_repo
-from app.schemas.user import UserCreate, UserUpdate, UserResponse
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, ChangePasswordRequest
+from app.schemas.permission import AdminResetPasswordRequest
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -51,6 +52,40 @@ def update_user(
         update_fields['hashed_password'] = get_password_hash(update_fields.pop('password'))
 
     return user_repo.update(db, user, **update_fields)
+
+
+@router.put("/me/password")
+def change_my_password(
+    data: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current: User = Depends(get_current_user),
+):
+    if not verify_password(data.current_password, current.hashed_password):
+        raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta")
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
+    current.hashed_password = get_password_hash(data.new_password)
+    db.commit()
+    return {"message": "Contraseña actualizada correctamente"}
+
+
+@router.post("/{user_id}/reset-password")
+def reset_user_password(
+    user_id: int,
+    data: AdminResetPasswordRequest,
+    db: Session = Depends(get_db),
+    current: User = Depends(get_current_admin),
+):
+    if user_id == current.id:
+        raise HTTPException(status_code=400, detail="Usá el modal de cambiar contraseña para tu propia cuenta")
+    user = user_repo.get(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Mínimo 6 caracteres")
+    user.hashed_password = get_password_hash(data.new_password)
+    db.commit()
+    return {"message": "Contraseña reseteada correctamente"}
 
 
 @router.delete("/{user_id}", status_code=204)
