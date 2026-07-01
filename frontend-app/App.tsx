@@ -15,6 +15,7 @@ import { SalesScreen } from './src/screens/SalesScreen'
 import { CustomersScreen } from './src/screens/CustomersScreen'
 import { UsersScreen } from './src/screens/UsersScreen'
 import { CategoriesScreen } from './src/screens/CategoriesScreen'
+import { SalesHistoryScreen } from './src/screens/SalesHistoryScreen'
 
 const Stack = createNativeStackNavigator()
 
@@ -72,6 +73,7 @@ export default function App() {
                 <Stack.Screen name="Customers" component={CustomersScreen} options={{ title: 'Clientes' }} />
                 <Stack.Screen name="Users" component={UsersScreen} options={{ title: 'Usuarios' }} />
                 <Stack.Screen name="Categories" component={CategoriesScreen} options={{ title: 'Categorías' }} />
+                <Stack.Screen name="SalesHistory" component={SalesHistoryScreen} options={{ title: 'Historial de ventas' }} />
               </>
             )}
           </Stack.Navigator>

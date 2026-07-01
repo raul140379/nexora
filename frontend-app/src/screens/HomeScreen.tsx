@@ -28,11 +28,12 @@ export function HomeScreen({ navigation }: any) {
   const cards = [
     { label: 'Productos', value: stats.products, color: '#2563eb', screen: 'Products' },
     { label: 'Clientes', value: stats.customers, color: '#16a34a', screen: 'Customers', roles: ['admin', 'ejecutivo'] },
-    { label: 'Ventas', value: stats.sales, color: '#7c3aed', screen: 'Sales' },
+    { label: 'Ventas', value: stats.sales, color: '#7c3aed', screen: 'SalesHistory' },
   ]
 
   const menuItems = [
     { label: 'Nueva venta', screen: 'Sales', color: '#2563eb', roles: ['admin', 'ejecutivo', 'vendedor'] },
+    { label: 'Historial ventas', screen: 'SalesHistory', color: '#7c3aed', roles: ['admin', 'ejecutivo', 'vendedor'] },
     { label: 'Productos', screen: 'Products', color: '#0891b2', roles: ['admin', 'ejecutivo', 'vendedor'] },
     { label: 'Clientes', screen: 'Customers', color: '#16a34a', roles: ['admin', 'ejecutivo'] },
     { label: 'Categorías', screen: 'Categories', color: '#d97706', roles: ['admin', 'ejecutivo'] },

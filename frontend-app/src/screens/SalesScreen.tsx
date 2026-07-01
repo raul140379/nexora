@@ -11,7 +11,7 @@ type Tier = 'a' | 'b' | 'c'
 const TIER_LABELS: Record<Tier, string> = { a: 'Precio A', b: 'Precio B', c: 'Precio C' }
 const TIER_COLORS: Record<Tier, string> = { a: '#2563eb', b: '#16a34a', c: '#ea580c' }
 
-export function SalesScreen() {
+export function SalesScreen({ navigation }: any) {
   const [products, setProducts] = useState<Product[]>([])
   const [items, setItems] = useState<SaleItem[]>([])
   const [discount, setDiscount] = useState('0')
@@ -200,6 +200,9 @@ export function SalesScreen() {
           onPress={handleSave} disabled={!items.length || saving}>
           {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Confirmar venta · ${total.toFixed(2)}</Text>}
         </TouchableOpacity>
+        <TouchableOpacity style={styles.historyBtn} onPress={() => navigation.navigate('SalesHistory')}>
+          <Text style={styles.historyBtnText}>Ver historial de ventas</Text>
+        </TouchableOpacity>
       </View>
       <Modal visible={scannerOpen} animationType="slide" onRequestClose={() => setScannerOpen(false)}>
         <View style={{ flex: 1, backgroundColor: '#000' }}>
@@ -266,4 +269,6 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 28, fontWeight: '800', color: '#2563eb' },
   saveBtn: { backgroundColor: '#2563eb', borderRadius: 12, padding: 16, alignItems: 'center' },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  historyBtn: { marginTop: 10, padding: 12, alignItems: 'center' },
+  historyBtnText: { color: '#6b7280', fontSize: 13, fontWeight: '600' },
 })
