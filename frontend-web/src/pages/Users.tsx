@@ -9,9 +9,24 @@ interface UserData {
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  admin: 'bg-purple-100 text-purple-700',
-  ejecutivo: 'bg-blue-100 text-blue-700',
-  vendedor: 'bg-green-100 text-green-700',
+  admin:     'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40',
+  ejecutivo: 'bg-blue-900/40 text-blue-300 border border-blue-800/40',
+  vendedor:  'bg-green-900/40 text-green-300 border border-green-800/40',
+}
+
+const ROLE_PERMS: Record<UserRole, { can: string[]; cannot: string[] }> = {
+  admin: {
+    can:    ['Acceso total al sistema', 'Gestionar usuarios y roles', 'Ver montos y recaudación', 'Crear, editar y eliminar productos', 'Gestionar clientes y categorías', 'Ver y crear ventas'],
+    cannot: [],
+  },
+  ejecutivo: {
+    can:    ['Ver montos y recaudación', 'Crear, editar y eliminar productos', 'Gestionar clientes y categorías', 'Ver y crear ventas'],
+    cannot: ['Gestionar usuarios', 'Eliminar datos críticos'],
+  },
+  vendedor: {
+    can:    ['Ver productos y stock', 'Crear nuevas ventas', 'Ver sus propias ventas'],
+    cannot: ['Ver montos y recaudación', 'Editar productos', 'Ver clientes', 'Gestionar categorías', 'Acceder a usuarios'],
+  },
 }
 
 const EMPTY = { email: '', username: '', full_name: '', password: '', role: 'vendedor' as UserRole }
@@ -119,18 +134,19 @@ export function Users() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${u.is_active ? 'bg-green-900/30 text-green-400 border-green-800/30' : 'bg-red-900/30 text-red-400 border-red-800/30'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
                     {u.is_active ? 'Activo' : 'Inactivo'}
                   </span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1.5">
                     <button onClick={() => openEdit(u)}
-                      className="text-xs bg-[#172A46] hover:bg-blue-100 hover:text-blue-600 text-[#6B7280] px-3 py-1.5 rounded-lg">
+                      className="text-xs bg-[#172A46] hover:bg-[#D4AF37]/10 hover:text-[#D4AF37] text-gray-400 px-3 py-1.5 rounded-lg border border-white/10 transition-colors">
                       Editar
                     </button>
                     <button onClick={() => setDeleteId(u.id)}
-                      className="text-xs bg-red-50 hover:bg-red-100 text-red-500 px-3 py-1.5 rounded-lg">
+                      className="text-xs bg-red-900/20 hover:bg-red-900/40 text-red-400 px-3 py-1.5 rounded-lg border border-red-800/30 transition-colors">
                       Eliminar
                     </button>
                   </div>
@@ -196,12 +212,26 @@ export function Users() {
                   placeholder="••••••••" />
               </div>
 
-              {/* Preview del rol seleccionado */}
-              <div className={`rounded-lg px-3 py-2 text-xs ${ROLE_COLORS[form.role]}`}>
-                <span className="font-medium">{ROLE_LABELS[form.role]}: </span>
-                {form.role === 'admin' && 'Acceso total al sistema.'}
-                {form.role === 'ejecutivo' && 'Puede gestionar ventas, clientes y productos.'}
-                {form.role === 'vendedor' && 'Solo puede registrar ventas y ver productos.'}
+              {/* Matriz de permisos del rol seleccionado */}
+              <div className="bg-[#172A46] border border-white/10 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${ROLE_COLORS[form.role]}`}>
+                    {ROLE_LABELS[form.role]}
+                  </span>
+                  <span className="text-xs text-gray-500">— permisos asignados</span>
+                </div>
+                <div className="space-y-1.5">
+                  {ROLE_PERMS[form.role].can.map(p => (
+                    <div key={p} className="flex items-center gap-2 text-xs text-green-400">
+                      <span className="text-green-500 flex-shrink-0">✓</span> {p}
+                    </div>
+                  ))}
+                  {ROLE_PERMS[form.role].cannot.map(p => (
+                    <div key={p} className="flex items-center gap-2 text-xs text-gray-600">
+                      <span className="flex-shrink-0">✕</span> {p}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="flex gap-3 pt-1">
