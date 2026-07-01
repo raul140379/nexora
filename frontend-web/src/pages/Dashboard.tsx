@@ -36,7 +36,7 @@ export function Dashboard() {
   const firstName = user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-1">

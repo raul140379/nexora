@@ -30,9 +30,9 @@ export function Customers() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Clientes</h2>
+    <div className="p-4 md:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Clientes</h2>
         <form onSubmit={handleSearch} className="flex gap-2">
           <input
             type="text"
@@ -45,8 +45,8 @@ export function Customers() {
         </form>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-xl">
+        <table className="w-full text-sm min-w-[500px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {['Nombre', 'Email', 'Teléfono', 'Documento', 'Estado'].map((h) => (

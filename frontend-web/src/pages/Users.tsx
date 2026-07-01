@@ -86,8 +86,8 @@ export function Users() {
   if (loading) return <div className="p-8 text-gray-500">Cargando...</div>
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Usuarios</h2>
           <p className="text-sm text-gray-500 mt-0.5">Gestión de accesos y roles del sistema</p>
@@ -98,8 +98,8 @@ export function Users() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-xl">
+        <table className="w-full text-sm min-w-[560px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {['Nombre', 'Usuario', 'Email', 'Rol', 'Estado', 'Acciones'].map(h => (

@@ -82,8 +82,8 @@ export function Categories() {
   if (loading) return <div className="p-8 text-gray-500">Cargando...</div>
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Categorías y Tipos</h2>
         <button onClick={() => setShowCatModal(true)}
           className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg transition-colors">

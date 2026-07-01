@@ -132,16 +132,16 @@ export function Sales() {
   if (loading) return <div className="p-8 text-gray-500">Cargando...</div>
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Ventas</h2>
+    <div className="p-4 md:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Ventas</h2>
         <button onClick={openModal} className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg">
           + Nueva venta
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-xl">
+        <table className="w-full text-sm min-w-[600px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {['#', 'Fecha', 'Cliente', 'Items', 'Subtotal', 'Desc.', 'Total', 'Estado'].map(h => (
@@ -190,8 +190,8 @@ export function Sales() {
 
       {/* Modal nueva venta */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-2xl sm:mx-4 max-h-[95vh] sm:max-h-[92vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-xl">
               <h3 className="text-lg font-semibold text-gray-900">Nueva venta</h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>

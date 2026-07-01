@@ -196,10 +196,10 @@ export function Products() {
   if (loading) return <div className="p-8 text-gray-500">Cargando...</div>
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-2xl font-bold text-gray-900">Productos</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900">Productos</h2>
         <div className="flex gap-2">
           <button onClick={() => { setDeleteModal('all'); setDeleteConfirmText('') }}
             className="border border-red-300 text-red-500 hover:bg-red-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors">
@@ -287,7 +287,7 @@ export function Products() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
+      <div className="bg-white rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-xl">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -395,8 +395,8 @@ export function Products() {
 
       {/* Modal crear / editar producto */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[92vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-2xl sm:mx-4 max-h-[95vh] sm:max-h-[92vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-xl">
               <h3 className="text-lg font-semibold text-gray-900">{editingId ? 'Editar producto' : 'Nuevo producto'}</h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
