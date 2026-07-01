@@ -47,6 +47,11 @@ class UserResponse(UserBase):
     updated_at: datetime
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
