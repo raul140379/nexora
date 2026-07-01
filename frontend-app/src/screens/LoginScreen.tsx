@@ -32,14 +32,23 @@ export function LoginScreen({ navigation }: any) {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.card}>
-        <Text style={styles.brand}>Nexora</Text>
-        <Text style={styles.subtitle}>Sistema de Ventas</Text>
 
+      {/* Logo area */}
+      <View style={styles.logoArea}>
+        <View style={styles.logoCircle}>
+          <Text style={styles.logoP}>P</Text>
+        </View>
+        <Text style={styles.brand}>EL PATRÓN SHOP</Text>
+        <Text style={styles.tagline}>Más que un producto, una experiencia.</Text>
+      </View>
+
+      {/* Form */}
+      <View style={styles.form}>
+        <Text style={styles.formTitle}>Iniciar sesión</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#555"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -49,28 +58,40 @@ export function LoginScreen({ navigation }: any) {
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#555"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
           editable={!loading}
         />
-
         <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleLogin} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Iniciar sesión</Text>}
+          {loading
+            ? <ActivityIndicator color="#0F0F0F" />
+            : <Text style={styles.btnText}>Confirmar</Text>}
         </TouchableOpacity>
       </View>
+
+      <Text style={styles.powered}>Powered by Nexora</Text>
     </KeyboardAvoidingView>
   )
 }
 
+const GOLD = '#D4AF37'
+const BLACK = '#0F0F0F'
+const CARD  = '#1A1A1A'
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6', justifyContent: 'center', padding: 24 },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 28, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
-  brand: { fontSize: 32, fontWeight: '800', color: '#1d4ed8', textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 28 },
-  input: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, padding: 14, marginBottom: 12, fontSize: 15, color: '#111827', backgroundColor: '#f9fafb' },
-  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 15, alignItems: 'center', marginTop: 4 },
-  btnDisabled: { opacity: 0.6 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  container:    { flex: 1, backgroundColor: BLACK, justifyContent: 'center', paddingHorizontal: 28 },
+  logoArea:     { alignItems: 'center', marginBottom: 36 },
+  logoCircle:   { width: 100, height: 100, borderRadius: 50, backgroundColor: CARD, borderWidth: 2, borderColor: GOLD, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  logoP:        { fontSize: 52, fontWeight: '900', color: GOLD },
+  brand:        { fontSize: 22, fontWeight: '800', color: GOLD, letterSpacing: 3, textAlign: 'center' },
+  tagline:      { fontSize: 12, color: '#B8860B', fontStyle: 'italic', marginTop: 6, textAlign: 'center' },
+  form:         { backgroundColor: CARD, borderRadius: 16, padding: 24, borderWidth: 1, borderColor: '#2a2a2a' },
+  formTitle:    { fontSize: 16, fontWeight: '700', color: '#ccc', marginBottom: 18, textAlign: 'center', letterSpacing: 1 },
+  input:        { borderWidth: 1, borderColor: '#333', borderRadius: 10, padding: 14, marginBottom: 12, fontSize: 15, color: '#fff', backgroundColor: BLACK },
+  btn:          { backgroundColor: GOLD, borderRadius: 10, padding: 15, alignItems: 'center', marginTop: 4 },
+  btnDisabled:  { opacity: 0.6 },
+  btnText:      { color: BLACK, fontSize: 16, fontWeight: '800', letterSpacing: 1 },
+  powered:      { textAlign: 'center', color: '#333', fontSize: 11, marginTop: 28 },
 })

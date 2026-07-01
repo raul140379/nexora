@@ -44,13 +44,16 @@ export function HomeScreen({ navigation }: any) {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hola, {user?.full_name?.split(' ')[0] || user?.email}</Text>
-          <Text style={styles.roleTag}>{ROLE_LABELS[role]}</Text>
+        <Text style={styles.shopName}>EL PATRÓN SHOP</Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.greeting}>Hola, {user?.full_name?.split(' ')[0] || user?.email}</Text>
+            <Text style={styles.roleTag}>{ROLE_LABELS[role]}</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+            <Text style={styles.logoutText}>Salir</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-          <Text style={styles.logoutText}>Salir</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Stats */}
@@ -80,11 +83,13 @@ export function HomeScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f4f6' },
-  header: { backgroundColor: '#1e40af', padding: 24, paddingTop: 52, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  greeting: { color: '#fff', fontSize: 20, fontWeight: '700' },
-  roleTag: { color: '#93c5fd', fontSize: 13, marginTop: 2 },
-  logoutBtn: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 },
-  logoutText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  header: { backgroundColor: '#0F0F0F', padding: 20, paddingTop: 52 },
+  shopName: { color: '#D4AF37', fontSize: 18, fontWeight: '800', letterSpacing: 3, textAlign: 'center', marginBottom: 12 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  greeting: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  roleTag: { color: '#B8860B', fontSize: 13, marginTop: 2 },
+  logoutBtn: { backgroundColor: 'rgba(212,175,55,0.15)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#D4AF37' },
+  logoutText: { color: '#D4AF37', fontSize: 13, fontWeight: '600' },
   statsRow: { flexDirection: 'row', padding: 16, gap: 10 },
   statCard: { flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 16, alignItems: 'center', borderTopWidth: 3, elevation: 2 },
   statValue: { fontSize: 28, fontWeight: '800' },
