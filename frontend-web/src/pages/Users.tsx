@@ -83,14 +83,14 @@ export function Users() {
     } finally { setDeleting(false) }
   }
 
-  if (loading) return <div className="p-8 text-gray-500">Cargando...</div>
+  if (loading) return <div className="p-8 text-[#6B7280]">Cargando...</div>
 
   return (
     <div className="p-4 md:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Usuarios</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Gestión de accesos y roles del sistema</p>
+          <h2 className="text-2xl font-bold text-gray-100">Usuarios</h2>
+          <p className="text-sm text-[#6B7280] mt-0.5">Gestión de accesos y roles del sistema</p>
         </div>
         <button onClick={openCreate}
           className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg">
@@ -98,21 +98,21 @@ export function Users() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-xl">
+      <div className="bg-[#243D66] rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-xl">
         <table className="w-full text-sm min-w-[560px]">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-[#172A46] border-b border-[#1E3557] [&_th]:text-white">
             <tr>
               {['Nombre', 'Usuario', 'Email', 'Rol', 'Estado', 'Acciones'].map(h => (
-                <th key={h} className="px-4 py-3 text-left font-medium text-gray-600">{h}</th>
+                <th key={h} className="px-4 py-3 text-left font-medium text-white">{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-white/10">
             {users.map(u => (
-              <tr key={u.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-900">{u.full_name || '—'}</td>
-                <td className="px-4 py-3 text-gray-500 font-mono text-xs">@{u.username}</td>
-                <td className="px-4 py-3 text-gray-500">{u.email}</td>
+              <tr key={u.id} className="hover:bg-[#1E3557]">
+                <td className="px-4 py-3 font-medium text-gray-100">{u.full_name || '—'}</td>
+                <td className="px-4 py-3 text-[#6B7280] font-mono text-xs">@{u.username}</td>
+                <td className="px-4 py-3 text-[#6B7280]">{u.email}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${ROLE_COLORS[u.role]}`}>
                     {ROLE_LABELS[u.role]}
@@ -126,7 +126,7 @@ export function Users() {
                 <td className="px-4 py-3">
                   <div className="flex gap-1.5">
                     <button onClick={() => openEdit(u)}
-                      className="text-xs bg-gray-100 hover:bg-blue-100 hover:text-blue-600 text-gray-600 px-3 py-1.5 rounded-lg">
+                      className="text-xs bg-[#172A46] hover:bg-blue-100 hover:text-blue-600 text-[#6B7280] px-3 py-1.5 rounded-lg">
                       Editar
                     </button>
                     <button onClick={() => setDeleteId(u.id)}
@@ -144,33 +144,33 @@ export function Users() {
       {/* Modal crear/editar */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+          <div className="bg-[#243D66] rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-semibold text-gray-900">{editingId ? 'Editar usuario' : 'Nuevo usuario'}</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+              <h3 className="text-lg font-semibold text-gray-100">{editingId ? 'Editar usuario' : 'Nuevo usuario'}</h3>
+              <button onClick={() => setShowModal(false)} className="text-[#6B7280] hover:text-[#6B7280] text-xl">&times;</button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Nombre completo</label>
                 <input value={form.full_name} onChange={e => setForm(p => ({ ...p, full_name: e.target.value }))}
                   autoFocus
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                  className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="Ej: Juan Pérez" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Usuario *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Usuario *</label>
                   <input value={form.username} onChange={e => setForm(p => ({ ...p, username: e.target.value }))}
                     required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                    className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                     placeholder="usuario123" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Rol *</label>
                   <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value as UserRole }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
+                    className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
                     <option value="admin">Administrador</option>
                     <option value="ejecutivo">Ejecutivo de Ventas</option>
                     <option value="vendedor">Vendedor Asistente</option>
@@ -179,20 +179,20 @@ export function Users() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Email *</label>
                 <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                   type="email" required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                  className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="usuario@empresa.com" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contraseña {editingId && <span className="text-gray-400 font-normal">(dejar vacío para no cambiar)</span>}
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Contraseña {editingId && <span className="text-[#6B7280] font-normal">(dejar vacío para no cambiar)</span>}
                 </label>
                 <input value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
                   type="password" required={!editingId}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                  className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="••••••••" />
               </div>
 
@@ -206,7 +206,7 @@ export function Users() {
 
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowModal(false)}
-                  className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2.5 rounded-lg hover:bg-gray-50">
+                  className="flex-1 border border-white/10 text-gray-300 text-sm font-medium py-2.5 rounded-lg hover:bg-[#1E3557]">
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving}
@@ -222,14 +222,14 @@ export function Users() {
       {/* Modal confirmar eliminar */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Eliminar usuario</h3>
-            <p className="text-sm text-gray-600 mb-5">
+          <div className="bg-[#243D66] rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-100 mb-2">Eliminar usuario</h3>
+            <p className="text-sm text-[#6B7280] mb-5">
               ¿Confirmás que querés eliminar este usuario? Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteId(null)}
-                className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2 rounded-lg hover:bg-gray-50">
+                className="flex-1 border border-white/10 text-gray-300 text-sm font-medium py-2 rounded-lg hover:bg-[#1E3557]">
                 Cancelar
               </button>
               <button onClick={handleDelete} disabled={deleting}

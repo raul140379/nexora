@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore, ROLE_LABELS, UserRole } from '../store/auth.store'
+import { api } from '../services/api'
+import toast from 'react-hot-toast'
 
 interface NavItem { to: string; label: string; icon: string; exact?: boolean; roles: UserRole[] }
 
@@ -10,7 +12,8 @@ const navItems: NavItem[] = [
   { to: '/sales',      label: 'Ventas',     icon: '◆',              roles: ['admin', 'ejecutivo', 'vendedor'] },
   { to: '/customers',  label: 'Clientes',   icon: '◎',              roles: ['admin', 'ejecutivo'] },
   { to: '/categories', label: 'Categorías', icon: '◇',              roles: ['admin', 'ejecutivo'] },
-  { to: '/users',      label: 'Usuarios',   icon: '◉',              roles: ['admin'] },
+  { to: '/users',         label: 'Usuarios',      icon: '◉',              roles: ['admin'] },
+  { to: '/design-system', label: 'Design System', icon: '◈',              roles: ['admin'] },
 ]
 
 const ROLE_BADGE: Record<UserRole, string> = {
@@ -19,14 +22,58 @@ const ROLE_BADGE: Record<UserRole, string> = {
   vendedor:  'bg-green-900/40 text-green-300 border border-green-800/40',
 }
 
+const EyeIcon = ({ open }: { open: boolean }) => open ? (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+) : (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+)
+
+const EMPTY_PW = { current: '', next: '', confirm: '' }
+
 export function Layout() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const role = (user?.role ?? 'vendedor') as UserRole
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [pwModal, setPwModal] = useState(false)
+  const [pwForm, setPwForm] = useState(EMPTY_PW)
+  const [pwLoading, setPwLoading] = useState(false)
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
 
   const handleLogout = () => { logout(); navigate('/login') }
   const closeMobile = () => setMobileOpen(false)
+
+  const handleChangePw = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (pwForm.next !== pwForm.confirm) {
+      toast.error('Las contraseñas nuevas no coinciden')
+      return
+    }
+    if (pwForm.next.length < 6) {
+      toast.error('La nueva contraseña debe tener al menos 6 caracteres')
+      return
+    }
+    setPwLoading(true)
+    try {
+      await api.put('/users/me/password', {
+        current_password: pwForm.current,
+        new_password: pwForm.next,
+      })
+      toast.success('Contraseña actualizada correctamente')
+      setPwModal(false)
+      setPwForm(EMPTY_PW)
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Error al cambiar contraseña')
+    } finally {
+      setPwLoading(false)
+    }
+  }
 
   const SidebarContent = () => (
     <>
@@ -39,7 +86,6 @@ export function Layout() {
             <p className="text-xs font-bold text-[#D4AF37] tracking-[0.2em] leading-tight">EL PATRÓN SHOP</p>
             <p className="text-[10px] text-[#B8860B] leading-tight mt-0.5">Tienda y Licorería</p>
           </div>
-          {/* Close on mobile */}
           <button onClick={closeMobile}
             className="lg:hidden ml-auto text-[#555] hover:text-white text-xl leading-none p-1">
             ✕
@@ -86,6 +132,10 @@ export function Layout() {
             </span>
           </div>
         </div>
+        <button onClick={() => { setPwModal(true); setPwForm(EMPTY_PW); closeMobile() }}
+          className="w-full text-left text-xs text-[#555] hover:text-[#D4AF37] transition-colors mb-1.5">
+          → Cambiar contraseña
+        </button>
         <button onClick={handleLogout}
           className="w-full text-left text-xs text-[#444] hover:text-[#D4AF37] transition-colors">
           → Cerrar sesión
@@ -95,7 +145,7 @@ export function Layout() {
   )
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-[#1E3557] overflow-hidden">
 
       {/* ── Mobile top bar ── */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-[#0F0F0F] z-30 flex items-center gap-3 px-4 border-b border-[#2A2A2A] shadow-lg">
@@ -133,6 +183,85 @@ export function Layout() {
       <main className="flex-1 overflow-auto pt-14 lg:pt-0 min-w-0">
         <Outlet />
       </main>
+
+      {/* ── Modal cambiar contraseña ── */}
+      {pwModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] px-4">
+          <div className="bg-[#243D66] rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-base font-semibold text-gray-100">Cambiar contraseña</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{user?.email}</p>
+              </div>
+              <button onClick={() => setPwModal(false)} className="text-gray-400 hover:text-gray-200 text-xl leading-none">&times;</button>
+            </div>
+
+            <form onSubmit={handleChangePw} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5 uppercase tracking-wider">Contraseña actual</label>
+                <div className="relative">
+                  <input
+                    type={showCurrent ? 'text' : 'password'}
+                    value={pwForm.current}
+                    onChange={e => setPwForm(p => ({ ...p, current: e.target.value }))}
+                    required autoFocus
+                    className="w-full border border-white/20 rounded-lg px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
+                    placeholder="Tu contraseña actual"
+                  />
+                  <button type="button" onClick={() => setShowCurrent(p => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D4AF37] transition-colors" tabIndex={-1}>
+                    <EyeIcon open={showCurrent} />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5 uppercase tracking-wider">Nueva contraseña</label>
+                <div className="relative">
+                  <input
+                    type={showNew ? 'text' : 'password'}
+                    value={pwForm.next}
+                    onChange={e => setPwForm(p => ({ ...p, next: e.target.value }))}
+                    required
+                    className="w-full border border-white/20 rounded-lg px-3 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
+                    placeholder="Mínimo 6 caracteres"
+                  />
+                  <button type="button" onClick={() => setShowNew(p => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#D4AF37] transition-colors" tabIndex={-1}>
+                    <EyeIcon open={showNew} />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5 uppercase tracking-wider">Confirmar nueva contraseña</label>
+                <input
+                  type="password"
+                  value={pwForm.confirm}
+                  onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))}
+                  required
+                  className="w-full border border-white/20 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37]"
+                  placeholder="Repetí la nueva contraseña"
+                />
+                {pwForm.confirm && pwForm.next !== pwForm.confirm && (
+                  <p className="text-xs text-red-400 mt-1">Las contraseñas no coinciden</p>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setPwModal(false)}
+                  className="flex-1 border border-white/20 text-gray-300 text-sm font-medium py-2.5 rounded-lg hover:bg-[#1E3557] transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={pwLoading}
+                  className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50 transition-colors">
+                  {pwLoading ? 'Guardando...' : 'Actualizar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

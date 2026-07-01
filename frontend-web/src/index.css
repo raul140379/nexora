@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Inputs dentro de tarjetas navy */
+input:not([class*="bg-"]),
+select:not([class*="bg-"]),
+textarea:not([class*="bg-"]) {
+  background-color: #172A46;
+  color: #F9FAFB;
+}
+input::placeholder, textarea::placeholder {
+  color: #6B7280;
+}
