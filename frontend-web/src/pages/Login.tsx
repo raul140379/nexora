@@ -30,48 +30,68 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-md p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-gray-900 mb-1">Nexora</h1>
-        <p className="text-gray-500 mb-8">Iniciá sesión en tu cuenta</p>
+    <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="tu@email.com"
-            />
+        {/* Logo + Brand */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative mb-5">
+            <img src="/logo.png" alt="El Patrón Shop"
+              className="w-28 h-28 rounded-full object-cover ring-2 ring-[#D4AF37]/70 shadow-[0_0_40px_rgba(212,175,55,0.25)]" />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Ingresando...' : 'Iniciar sesión'}
-          </button>
-        </form>
+          <h1 className="text-xl font-bold text-[#D4AF37] tracking-[0.3em] mb-1">EL PATRÓN SHOP</h1>
+          <p className="text-xs text-[#B8860B] italic">Más que un producto, una experiencia.</p>
+        </div>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
-          ¿No tenés cuenta?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline font-medium">
-            Registrate
-          </Link>
+        {/* Form card */}
+        <div className="bg-[#1A1A1A] rounded-2xl border border-[#2A2A2A] p-8 shadow-2xl">
+          <div className="mb-6 text-center">
+            <p className="text-sm font-semibold text-white tracking-wider">SISTEMA DE VENTAS</p>
+            <p className="text-xs text-[#555] mt-1">la transformación digital que te guía</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-[#888] mb-1.5 uppercase tracking-wider">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-[#0F0F0F] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-[#444] focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-colors"
+                placeholder="tu@email.com"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#888] mb-1.5 uppercase tracking-wider">Contraseña</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full bg-[#0F0F0F] border border-[#333] rounded-lg px-4 py-2.5 text-sm text-white placeholder-[#444] focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-colors"
+                placeholder="••••••••"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 mt-2 tracking-wider text-sm"
+            >
+              {loading ? 'Ingresando...' : 'INICIAR SESIÓN'}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-xs text-[#444]">
+            ¿No tenés cuenta?{' '}
+            <Link to="/register" className="text-[#D4AF37] hover:text-[#B8860B] font-medium transition-colors">
+              Registrate
+            </Link>
+          </p>
+        </div>
+
+        <p className="text-center text-[10px] text-[#333] mt-6 tracking-widest">
+          NEXORA · el impulso hacia el futuro
         </p>
       </div>
     </div>

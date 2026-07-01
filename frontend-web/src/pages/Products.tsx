@@ -205,7 +205,7 @@ export function Products() {
             className="border border-red-300 text-red-500 hover:bg-red-50 text-sm font-medium px-4 py-2 rounded-lg transition-colors">
             Eliminar todos
           </button>
-          <button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
+          <button onClick={openCreate} className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg">
             + Agregar producto
           </button>
         </div>
@@ -218,7 +218,7 @@ export function Products() {
           value={searchText}
           onChange={e => setSearchText(e.target.value)}
           placeholder="Buscar por nombre o código..."
-          className="border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 rounded-lg pl-9 pr-8 py-2 text-sm w-72 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
         />
         {searchText && (
           <button onClick={() => setSearchText('')}
@@ -235,7 +235,7 @@ export function Products() {
         </button>
         {allCategories.map(cat => (
           <button key={cat.id} onClick={() => { setFilterCat(String(cat.id)); setFilterSub('__all__') }}
-            className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${filterCat === String(cat.id) ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${filterCat === String(cat.id) ? 'bg-[#D4AF37] text-[#0F0F0F]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {cat.name}
           </button>
         ))}
@@ -268,7 +268,7 @@ export function Products() {
         </button>
         {allPackNames.map(name => (
           <button key={name} onClick={() => setFilterPack(name)}
-            className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${filterPack === name ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            className={`text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${filterPack === name ? 'bg-[#D4AF37] text-[#0F0F0F]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {name}
           </button>
         ))}
@@ -384,7 +384,7 @@ export function Products() {
                   Cancelar
                 </button>
                 <button type="button" onClick={handleAddStock} disabled={stockSaving}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 rounded-lg disabled:opacity-50">
+                  className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2 rounded-lg disabled:opacity-50">
                   {stockSaving ? 'Guardando...' : '+ Agregar stock'}
                 </button>
               </div>
@@ -406,7 +406,7 @@ export function Products() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
                 <input name="name" value={form.name} onChange={handleChange} required autoFocus
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="Ej: Paceña 269" />
               </div>
 
@@ -414,7 +414,7 @@ export function Products() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
                   <select name="category_id" value={form.category_id} onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
                     <option value="">Sin categoría</option>
                     {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
@@ -423,7 +423,7 @@ export function Products() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
                   <select name="subcategory_id" value={form.subcategory_id} onChange={handleChange}
                     disabled={!form.category_id || subcategories.length === 0}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400">
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37] disabled:bg-gray-50 disabled:text-gray-400">
                     <option value="">Sin tipo</option>
                     {subcategories.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
@@ -445,7 +445,7 @@ export function Products() {
                   </div>
                 </div>
                 <input ref={skuRef} name="sku" value={form.sku} onChange={handleChange} onKeyDown={handleSkuKey}
-                  className={`w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 ${scanMode ? 'border-green-400 focus:ring-green-400 bg-green-50' : 'border-gray-300 focus:ring-blue-500'}`}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 ${scanMode ? 'border-green-400 focus:ring-green-400 bg-green-50' : 'border-gray-300 focus:ring-[#D4AF37]'}`}
                   placeholder={scanMode ? 'Apuntá el lector aquí...' : 'Ej: 7790001234567'} />
               </div>
 
@@ -457,7 +457,7 @@ export function Products() {
                     <p className="text-xs text-gray-400 mt-0.5">A = precio mayor · B = precio medio · C = precio menor</p>
                   </div>
                   <button type="button" onClick={addPack}
-                    className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium px-3 py-1.5 rounded-full">
+                    className="text-xs bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#B8860B] font-medium px-3 py-1.5 rounded-full">
                     + Empaque
                   </button>
                 </div>
@@ -477,10 +477,10 @@ export function Products() {
                     <div key={i} className="grid grid-cols-[140px_60px_1fr_1fr_1fr_70px_28px] gap-2 items-center bg-gray-50 rounded-lg p-2">
                       <input value={pack.pack_name} onChange={e => handlePackChange(i, 'pack_name', e.target.value)}
                         placeholder="Unidad" required
-                        className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                        className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37]" />
                       <input value={pack.units_per_pack} onChange={e => handlePackChange(i, 'units_per_pack', e.target.value)}
                         type="number" min="1" required
-                        className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
+                        className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] text-center" />
                       <div className="relative">
                         <span className="absolute left-2 top-1.5 text-blue-400 text-xs font-bold">A $</span>
                         <input value={pack.price_a} onChange={e => handlePackChange(i, 'price_a', e.target.value)}
@@ -501,7 +501,7 @@ export function Products() {
                       </div>
                       <input value={pack.stock} onChange={e => handlePackChange(i, 'stock', e.target.value)}
                         type="number" min="0" placeholder="0"
-                        className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" />
+                        className="border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#D4AF37] text-center" />
                       <button type="button" onClick={() => removePack(i)} disabled={packs.length === 1}
                         className="text-red-400 hover:text-red-600 text-lg leading-none disabled:opacity-30">&times;</button>
                     </div>
@@ -515,7 +515,7 @@ export function Products() {
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg disabled:opacity-50">
+                  className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50">
                   {saving ? 'Guardando...' : editingId ? 'Actualizar' : 'Guardar producto'}
                 </button>
               </div>

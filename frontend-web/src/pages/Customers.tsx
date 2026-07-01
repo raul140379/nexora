@@ -39,9 +39,9 @@ export function Customers() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar..."
-            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
           />
-          <button type="submit" className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm">Buscar</button>
+          <button type="submit" className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] px-3 py-1.5 rounded-lg text-sm font-semibold">Buscar</button>
         </form>
       </div>
 

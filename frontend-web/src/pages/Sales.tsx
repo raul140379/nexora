@@ -135,7 +135,7 @@ export function Sales() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Ventas</h2>
-        <button onClick={openModal} className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
+        <button onClick={openModal} className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg">
           + Nueva venta
         </button>
       </div>
@@ -202,7 +202,7 @@ export function Sales() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
                 <select value={customerId} onChange={e => setCustomerId(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
                   <option value="">Consumidor final</option>
                   {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -232,7 +232,7 @@ export function Sales() {
                 <div>
                   <label className="text-xs text-gray-500 mb-1 block">Producto</label>
                   <select value={selProductId} onChange={e => setSelProductId(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
                     <option value="">— Seleccioná o usá el escáner —</option>
                     {products.map(p => <option key={p.id} value={p.id}>{p.name}{p.sku ? ` [${p.sku}]` : ''}</option>)}
                   </select>
@@ -261,7 +261,7 @@ export function Sales() {
                       <div>
                         <label className="text-xs text-gray-500 mb-1 block">Empaque</label>
                         <select value={selPackId} onChange={e => setSelPackId(e.target.value)}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
                           {selectedProduct.prices.map(pr => (
                             <option key={pr.id} value={pr.id}>
                               {pr.pack_name} ({pr.units_per_pack} un.) — stock: {pr.stock}
@@ -277,7 +277,7 @@ export function Sales() {
                             return (
                               <button key={t} type="button" disabled={pr == null}
                                 onClick={() => setSelTier(t)}
-                                className={`px-3 py-2 text-xs font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${selTier === t ? (t === 'a' ? 'bg-blue-600 text-white' : t === 'b' ? 'bg-green-600 text-white' : 'bg-orange-500 text-white') : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                                className={`px-3 py-2 text-xs font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${selTier === t ? (t === 'a' ? 'bg-[#D4AF37] text-[#0F0F0F]' : t === 'b' ? 'bg-green-600 text-white' : 'bg-orange-500 text-white') : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
                                 {t.toUpperCase()}{pr != null && <span className="block text-[10px] font-normal opacity-80">${Number(pr).toFixed(0)}</span>}
                               </button>
                             )
@@ -287,11 +287,11 @@ export function Sales() {
                       <div>
                         <label className="text-xs text-gray-500 mb-1 block">Cant.</label>
                         <input value={selQty} onChange={e => setSelQty(e.target.value)} type="number" min="1"
-                          className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                          className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#D4AF37]" />
                       </div>
                       <button type="button" onClick={addItem}
                         disabled={!selectedProduct || !selectedPack || selectedPack.stock === 0}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
+                        className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
                         + Agregar
                       </button>
                     </div>
@@ -353,7 +353,7 @@ export function Sales() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-base font-bold text-gray-900">Total a cobrar</span>
-                  <span className="text-2xl font-bold text-blue-600">${total.toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-[#D4AF37]">${total.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -361,7 +361,7 @@ export function Sales() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
                 <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37] resize-none"
                   placeholder="Observaciones opcionales..." />
               </div>
 
@@ -371,7 +371,7 @@ export function Sales() {
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving || !items.length}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg disabled:opacity-50">
+                  className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50">
                   {saving ? 'Guardando...' : `Confirmar venta — $${total.toFixed(2)}`}
                 </button>
               </div>

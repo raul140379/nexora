@@ -93,7 +93,7 @@ export function Users() {
           <p className="text-sm text-gray-500 mt-0.5">Gestión de accesos y roles del sistema</p>
         </div>
         <button onClick={openCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
+          className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg">
           + Nuevo usuario
         </button>
       </div>
@@ -155,7 +155,7 @@ export function Users() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
                 <input value={form.full_name} onChange={e => setForm(p => ({ ...p, full_name: e.target.value }))}
                   autoFocus
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="Ej: Juan Pérez" />
               </div>
 
@@ -164,13 +164,13 @@ export function Users() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Usuario *</label>
                   <input value={form.username} onChange={e => setForm(p => ({ ...p, username: e.target.value }))}
                     required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                     placeholder="usuario123" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
                   <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value as UserRole }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]">
                     <option value="admin">Administrador</option>
                     <option value="ejecutivo">Ejecutivo de Ventas</option>
                     <option value="vendedor">Vendedor Asistente</option>
@@ -182,7 +182,7 @@ export function Users() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                 <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                   type="email" required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="usuario@empresa.com" />
               </div>
 
@@ -192,7 +192,7 @@ export function Users() {
                 </label>
                 <input value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
                   type="password" required={!editingId}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="••••••••" />
               </div>
 
@@ -210,7 +210,7 @@ export function Users() {
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg disabled:opacity-50">
+                  className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50">
                   {saving ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear usuario'}
                 </button>
               </div>

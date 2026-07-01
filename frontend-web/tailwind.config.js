@@ -4,12 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#eff6ff',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-        },
+        gold:   '#D4AF37',
+        'gold-dark': '#B8860B',
+        patron: '#0F0F0F',
+        'patron-card': '#1A1A1A',
       },
     },
   },

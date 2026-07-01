@@ -86,7 +86,7 @@ export function Categories() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Categorías y Tipos</h2>
         <button onClick={() => setShowCatModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+          className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
           + Nueva categoría
         </button>
       </div>
@@ -111,7 +111,7 @@ export function Categories() {
                   {cat.is_active ? 'Activa' : 'Inactiva'}
                 </span>
                 <button onClick={() => openSubModal(cat)}
-                  className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium px-3 py-1.5 rounded-lg transition-colors">
+                  className="text-xs bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#B8860B] font-medium px-3 py-1.5 rounded-lg transition-colors">
                   + Tipo
                 </button>
               </div>
@@ -151,20 +151,20 @@ export function Categories() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
                 <input value={catForm.name} onChange={(e) => setCatForm((p) => ({ ...p, name: e.target.value }))}
                   required autoFocus
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="Ej: Licores, Ropa, Electrónica" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                 <textarea value={catForm.description} onChange={(e) => setCatForm((p) => ({ ...p, description: e.target.value }))}
-                  rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37] resize-none"
                   placeholder="Descripción opcional" />
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowCatModal(false)}
                   className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2 rounded-lg hover:bg-gray-50">Cancelar</button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded-lg disabled:opacity-50">
+                  className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2 rounded-lg disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Guardar'}
                 </button>
               </div>
@@ -187,14 +187,14 @@ export function Categories() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del tipo *</label>
                 <input value={subForm.name} onChange={(e) => setSubForm({ name: e.target.value })}
                   required autoFocus
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   placeholder="Ej: Vinos, Cerveza, Vodka" />
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowSubModal(false)}
                   className="flex-1 border border-gray-300 text-gray-700 text-sm font-medium py-2 rounded-lg hover:bg-gray-50">Cancelar</button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded-lg disabled:opacity-50">
+                  className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2 rounded-lg disabled:opacity-50">
                   {saving ? 'Guardando...' : 'Agregar tipo'}
                 </button>
               </div>
