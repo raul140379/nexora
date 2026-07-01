@@ -26,7 +26,7 @@ class SaleRepository(BaseRepository[Sale, SaleCreate, SaleUpdate]):
 
     def create_with_items(self, db: Session, data: SaleCreate, user_id: int) -> Sale:
         subtotal = sum(item.unit_price * item.quantity for item in data.items)
-        discount = data.discount_pct or 0
+        discount = data.discount_pct  # already Decimal with default Decimal("0")
         total = subtotal * (1 - discount / 100)
 
         sale = Sale(
