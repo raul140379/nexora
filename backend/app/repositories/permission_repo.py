@@ -1,10 +1,10 @@
+from typing import Optional, Dict, List
 from sqlalchemy.orm import Session
 from app.models.permission import RolePermission
 from app.schemas.permission import DEFAULT_PERMISSIONS, PERMISSION_CATALOG
 
 
 def seed_defaults(db: Session) -> None:
-    """Siembra los permisos por defecto si la tabla está vacía."""
     if db.query(RolePermission).count() > 0:
         return
     for role, perms in DEFAULT_PERMISSIONS.items():
@@ -13,23 +13,17 @@ def seed_defaults(db: Session) -> None:
     db.commit()
 
 
-def get_all(db: Session) -> list[RolePermission]:
-    return db.query(RolePermission).order_by(RolePermission.role, RolePermission.key).all()
-
-
-def get_by_role(db: Session, role: str) -> list[RolePermission]:
+def get_by_role(db: Session, role: str) -> List[RolePermission]:
     return db.query(RolePermission).filter(RolePermission.role == role).all()
 
 
-def get_map_for_role(db: Session, role: str) -> dict[str, bool]:
-    """Devuelve {key: allowed} para un rol. Incluye defaults si faltan claves."""
+def get_map_for_role(db: Session, role: str) -> Dict[str, bool]:
     rows = {r.key: r.allowed for r in get_by_role(db, role)}
-    # Asegurar que todas las claves del catálogo estén presentes
     defaults = DEFAULT_PERMISSIONS.get(role, {})
     return {k: rows.get(k, defaults.get(k, False)) for k in PERMISSION_CATALOG}
 
 
-def toggle(db: Session, role: str, key: str, allowed: bool) -> RolePermission | None:
+def toggle(db: Session, role: str, key: str, allowed: bool) -> Optional[RolePermission]:
     if key not in PERMISSION_CATALOG:
         return None
     row = db.query(RolePermission).filter(
@@ -47,7 +41,6 @@ def toggle(db: Session, role: str, key: str, allowed: bool) -> RolePermission | 
 
 
 def reset_role(db: Session, role: str) -> None:
-    """Restaura los permisos de un rol a sus valores por defecto."""
     db.query(RolePermission).filter(RolePermission.role == role).delete()
     for key, allowed in DEFAULT_PERMISSIONS.get(role, {}).items():
         db.add(RolePermission(role=role, key=key, allowed=allowed))

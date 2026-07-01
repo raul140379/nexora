@@ -1,7 +1,7 @@
 from pydantic import BaseModel
+from typing import List, Dict
 
-# Catálogo fijo de claves — agregar aquí si se necesitan nuevos permisos en el futuro
-PERMISSION_CATALOG: dict[str, str] = {
+PERMISSION_CATALOG: Dict[str, str] = {
     "view_revenue":      "Ver montos y recaudación",
     "manage_users":      "Gestionar usuarios y roles",
     "edit_products":     "Crear / editar / eliminar productos",
@@ -12,8 +12,7 @@ PERMISSION_CATALOG: dict[str, str] = {
     "view_reports":      "Ver reportes y estadísticas",
 }
 
-# Valores por defecto al sembrar la BD
-DEFAULT_PERMISSIONS: dict[str, dict[str, bool]] = {
+DEFAULT_PERMISSIONS: Dict[str, Dict[str, bool]] = {
     "admin": {k: True for k in PERMISSION_CATALOG},
     "ejecutivo": {
         "view_revenue":      True,
@@ -46,7 +45,7 @@ class PermissionItem(BaseModel):
 
 class RolePermissionsResponse(BaseModel):
     role:        str
-    permissions: list[PermissionItem]
+    permissions: List[PermissionItem]
 
 
 class PermissionToggle(BaseModel):
