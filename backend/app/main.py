@@ -52,7 +52,9 @@ if os.path.exists(STATIC_DIR):
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
-        # No interceptar rutas de la API ni de docs
         if full_path.startswith(("api/", "docs", "redoc", "health")):
             return {"detail": "Not Found"}
+        file_path = os.path.join(STATIC_DIR, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))
