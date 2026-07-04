@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAuthStore } from './src/store/auth.store'
+import { usePermissionsStore } from './src/store/permissions.store'
 import { authApi } from './src/services/auth.api'
 import { LoginScreen } from './src/screens/LoginScreen'
 import { HomeScreen } from './src/screens/HomeScreen'
@@ -21,6 +22,7 @@ const Stack = createNativeStackNavigator()
 
 export default function App() {
   const { setUser, setTokens, isAuthenticated } = useAuthStore()
+  const { load: loadPermissions, clear: clearPermissions } = usePermissionsStore()
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export default function App() {
           setTokens(token, '')
           const user = await authApi.getCurrentUser()
           setUser(user)
+          await loadPermissions()
         }
       } catch {
         // sin sesión previa
@@ -41,11 +44,15 @@ export default function App() {
     init()
   }, [])
 
+  useEffect(() => {
+    if (!isAuthenticated) clearPermissions()
+  }, [isAuthenticated])
+
   if (!ready) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1e40af' }}>
-          <ActivityIndicator size="large" color="#fff" />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0F0F0F' }}>
+          <ActivityIndicator size="large" color="#D4AF37" />
         </View>
       </GestureHandlerRootView>
     )
@@ -58,9 +65,9 @@ export default function App() {
           <StatusBar style="light" />
           <Stack.Navigator
             screenOptions={{
-              headerStyle: { backgroundColor: '#1e40af' },
-              headerTintColor: '#fff',
-              headerTitleStyle: { fontWeight: '700' },
+              headerStyle: { backgroundColor: '#0F0F0F' },
+              headerTintColor: '#D4AF37',
+              headerTitleStyle: { fontWeight: '700', color: '#fff' },
             }}
           >
             {!isAuthenticated ? (

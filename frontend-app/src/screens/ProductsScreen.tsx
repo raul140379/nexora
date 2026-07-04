@@ -6,6 +6,7 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { api } from '../services/api'
 import { useAuthStore } from '../store/auth.store'
+import { getNameEmoji } from '../utils/helpers'
 
 interface PackPrice { id: number; pack_name: string; price_a: number; price_b: number | null; price_c: number | null; stock: number }
 interface Category { id: number; name: string }
@@ -176,7 +177,7 @@ export function ProductsScreen() {
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar por nombre o código..."
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#4a6fa5"
           value={search}
           onChangeText={setSearch}
         />
@@ -189,42 +190,50 @@ export function ProductsScreen() {
 
       {/* Filtro por categoría */}
       <View style={styles.filterBar}>
-        <View style={styles.chipWrap}>
-          <TouchableOpacity style={[styles.chip, !filterCatId && styles.chipActive]}
-            onPress={() => { setFilterCatId(''); setFilterSubId('') }}>
-            <Text style={[styles.chipText, !filterCatId && { color: '#fff' }]}>Todas</Text>
-          </TouchableOpacity>
-          {categories.map(c => (
-            <TouchableOpacity key={c.id}
-              style={[styles.chip, filterCatId === String(c.id) && styles.chipActive]}
-              onPress={() => { setFilterCatId(String(c.id)); setFilterSubId('') }}>
-              <Text style={[styles.chipText, filterCatId === String(c.id) && { color: '#fff' }]}>{c.name}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.chipRow}>
+            <TouchableOpacity style={[styles.chip, !filterCatId && styles.chipActive]}
+              onPress={() => { setFilterCatId(''); setFilterSubId('') }}>
+              <Text style={[styles.chipText, !filterCatId && styles.chipTextActive]}>Todas</Text>
             </TouchableOpacity>
-          ))}
-        </View>
+            {categories.map(c => (
+              <TouchableOpacity key={c.id}
+                style={[styles.chip, filterCatId === String(c.id) && styles.chipActive]}
+                onPress={() => { setFilterCatId(String(c.id)); setFilterSubId('') }}>
+                <Text style={[styles.chipText, filterCatId === String(c.id) && styles.chipTextActive]}>
+                  {getNameEmoji(c.name)} {c.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       </View>
 
       {/* Filtro por subcategoría */}
       {filterCatId && filterSubs.length > 0 && (
-        <View style={[styles.filterBar, { marginTop: 0 }]}>
-          <View style={styles.chipWrap}>
-            <TouchableOpacity style={[styles.chip, !filterSubId && styles.chipActive]}
-              onPress={() => setFilterSubId('')}>
-              <Text style={[styles.chipText, !filterSubId && { color: '#fff' }]}>Todas</Text>
-            </TouchableOpacity>
-            {filterSubs.map(s => (
-              <TouchableOpacity key={s.id}
-                style={[styles.chip, filterSubId === String(s.id) && styles.chipActive]}
-                onPress={() => setFilterSubId(String(s.id))}>
-                <Text style={[styles.chipText, filterSubId === String(s.id) && { color: '#fff' }]}>{s.name}</Text>
+        <View style={[styles.filterBar, { paddingTop: 0 }]}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.chipRow}>
+              <TouchableOpacity style={[styles.chip, !filterSubId && styles.chipActive]}
+                onPress={() => setFilterSubId('')}>
+                <Text style={[styles.chipText, !filterSubId && styles.chipTextActive]}>Todas</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+              {filterSubs.map(s => (
+                <TouchableOpacity key={s.id}
+                  style={[styles.chip, filterSubId === String(s.id) && styles.chipActive]}
+                  onPress={() => setFilterSubId(String(s.id))}>
+                  <Text style={[styles.chipText, filterSubId === String(s.id) && styles.chipTextActive]}>
+                    {getNameEmoji(s.name)} {s.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
         </View>
       )}
 
       {loading ? (
-        <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color="#D4AF37" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={filtered}
@@ -237,7 +246,12 @@ export function ProductsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.productName}>{p.name}</Text>
                   {p.sku && <Text style={styles.sku}>{p.sku}</Text>}
-                  {p.category && <Text style={styles.category}>{p.category.name}{p.subcategory ? ` › ${p.subcategory.name}` : ''}</Text>}
+                  {p.category && (
+                    <Text style={styles.category}>
+                      {getNameEmoji(p.category.name)} {p.category.name}
+                      {p.subcategory ? ` › ${getNameEmoji(p.subcategory.name)} ${p.subcategory.name}` : ''}
+                    </Text>
+                  )}
                   {p.description && <Text style={styles.description}>{p.description}</Text>}
                 </View>
                 {canEdit && (
@@ -255,11 +269,11 @@ export function ProductsScreen() {
               {p.prices.map(pr => (
                 <View key={pr.id} style={styles.priceRow}>
                   <Text style={styles.packName}>{pr.pack_name}</Text>
-                  <Text style={[styles.price, { color: '#2563eb' }]}>A: {fmt(pr.price_a)}</Text>
-                  {pr.price_b != null && <Text style={[styles.price, { color: '#16a34a' }]}>B: {fmt(pr.price_b)}</Text>}
-                  {pr.price_c != null && <Text style={[styles.price, { color: '#ea580c' }]}>C: {fmt(pr.price_c)}</Text>}
+                  <Text style={[styles.price, { color: '#60a5fa' }]}>A: {fmt(pr.price_a)}</Text>
+                  {pr.price_b != null && <Text style={[styles.price, { color: '#4ade80' }]}>B: {fmt(pr.price_b)}</Text>}
+                  {pr.price_c != null && <Text style={[styles.price, { color: '#fb923c' }]}>C: {fmt(pr.price_c)}</Text>}
                   <View style={styles.stockRow}>
-                    <Text style={[styles.stock, { color: pr.stock === 0 ? '#ef4444' : '#374151' }]}>
+                    <Text style={[styles.stock, { color: pr.stock === 0 ? '#ef4444' : '#94a3b8' }]}>
                       Stock: {pr.stock}
                     </Text>
                     {canEdit && (
@@ -283,7 +297,7 @@ export function ProductsScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{editingId ? 'Editar producto' : 'Nuevo producto'}</Text>
               <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Text style={{ fontSize: 22, color: '#6b7280' }}>×</Text>
+                <Text style={{ fontSize: 22, color: '#94a3b8' }}>×</Text>
               </TouchableOpacity>
             </View>
 
@@ -291,13 +305,15 @@ export function ProductsScreen() {
             <View style={styles.chipWrap}>
               <TouchableOpacity style={[styles.chip, !form.category_id && styles.chipActive]}
                 onPress={() => setForm(p => ({ ...p, category_id: '', subcategory_id: '' }))}>
-                <Text style={[styles.chipText, !form.category_id && { color: '#fff' }]}>Ninguna</Text>
+                <Text style={[styles.chipText, !form.category_id && styles.chipTextActive]}>Ninguna</Text>
               </TouchableOpacity>
               {categories.map(c => (
                 <TouchableOpacity key={c.id}
                   style={[styles.chip, form.category_id === String(c.id) && styles.chipActive]}
                   onPress={() => setForm(p => ({ ...p, category_id: String(c.id), subcategory_id: '' }))}>
-                  <Text style={[styles.chipText, form.category_id === String(c.id) && { color: '#fff' }]}>{c.name}</Text>
+                  <Text style={[styles.chipText, form.category_id === String(c.id) && styles.chipTextActive]}>
+                    {getNameEmoji(c.name)} {c.name}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -310,7 +326,9 @@ export function ProductsScreen() {
                     <TouchableOpacity key={s.id}
                       style={[styles.chip, form.subcategory_id === String(s.id) && styles.chipActive]}
                       onPress={() => setForm(p => ({ ...p, subcategory_id: String(s.id) }))}>
-                      <Text style={[styles.chipText, form.subcategory_id === String(s.id) && { color: '#fff' }]}>{s.name}</Text>
+                      <Text style={[styles.chipText, form.subcategory_id === String(s.id) && styles.chipTextActive]}>
+                        {getNameEmoji(s.name)} {s.name}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -320,29 +338,29 @@ export function ProductsScreen() {
             <Text style={styles.label}>Código (SKU)</Text>
             <View style={styles.skuRow}>
               <TextInput style={[styles.input, { flex: 1 }]} value={form.sku} onChangeText={t => setForm(p => ({ ...p, sku: t }))}
-                placeholder="Ej: LIC-001" placeholderTextColor="#9ca3af" autoCapitalize="characters" />
+                placeholder="Ej: LIC-001" placeholderTextColor="#4a6fa5" autoCapitalize="characters" />
               <TouchableOpacity style={styles.skuBtn} onPress={openScanner}>
                 <Text style={styles.skuBtnText}>📷</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.skuBtn, { backgroundColor: '#f0fdf4' }]} onPress={generateSku}>
-                <Text style={[styles.skuBtnText, { color: '#16a34a' }]}>⚙️</Text>
+              <TouchableOpacity style={[styles.skuBtn, { backgroundColor: 'rgba(34,197,94,0.1)', borderColor: 'rgba(34,197,94,0.3)' }]} onPress={generateSku}>
+                <Text style={[styles.skuBtnText, { color: '#4ade80' }]}>⚙️</Text>
               </TouchableOpacity>
             </View>
 
             <Text style={styles.label}>Nombre *</Text>
             <TextInput style={styles.input} value={form.name} onChangeText={t => setForm(p => ({ ...p, name: t }))}
-              placeholder="Nombre del producto" placeholderTextColor="#9ca3af" />
+              placeholder="Nombre del producto" placeholderTextColor="#4a6fa5" />
 
             <Text style={styles.label}>Descripción</Text>
             <TextInput style={[styles.input, { minHeight: 70, textAlignVertical: 'top' }]}
               value={form.description} onChangeText={t => setForm(p => ({ ...p, description: t }))}
-              placeholder="Descripción opcional del producto" placeholderTextColor="#9ca3af"
+              placeholder="Descripción opcional del producto" placeholderTextColor="#4a6fa5"
               multiline numberOfLines={3} />
 
             <View style={styles.packHeader}>
               <Text style={styles.label}>Empaques y precios</Text>
               <TouchableOpacity onPress={() => setPacks(p => [...p, { ...EMPTY_PACK }])}>
-                <Text style={{ color: '#2563eb', fontWeight: '700', fontSize: 13 }}>+ Empaque</Text>
+                <Text style={{ color: '#D4AF37', fontWeight: '700', fontSize: 13 }}>+ Empaque</Text>
               </TouchableOpacity>
             </View>
 
@@ -358,21 +376,21 @@ export function ProductsScreen() {
                 </View>
                 <Text style={styles.subLabel}>Nombre del empaque</Text>
                 <TextInput style={styles.input} value={pk.pack_name} onChangeText={t => updatePack(i, 'pack_name', t)}
-                  placeholder="Ej: Unidad, Caja, Six-pack" placeholderTextColor="#9ca3af" />
+                  placeholder="Ej: Unidad, Caja, Six-pack" placeholderTextColor="#4a6fa5" />
                 <View style={styles.priceGrid}>
-                  {[['price_a', 'Precio A *', '#2563eb'], ['price_b', 'Precio B', '#16a34a'], ['price_c', 'Precio C', '#ea580c']].map(([field, lbl, color]) => (
+                  {[['price_a', 'Precio A *', '#60a5fa'], ['price_b', 'Precio B', '#4ade80'], ['price_c', 'Precio C', '#fb923c']].map(([field, lbl, color]) => (
                     <View key={field} style={{ flex: 1 }}>
                       <Text style={[styles.subLabel, { color }]}>{lbl}</Text>
                       <TextInput style={styles.smallInput}
                         value={pk[field as keyof PackForm]}
                         onChangeText={t => updatePack(i, field as keyof PackForm, t)}
-                        placeholder="0.00" placeholderTextColor="#9ca3af" keyboardType="decimal-pad" />
+                        placeholder="0.00" placeholderTextColor="#4a6fa5" keyboardType="decimal-pad" />
                     </View>
                   ))}
                 </View>
                 <Text style={styles.subLabel}>Stock inicial</Text>
                 <TextInput style={styles.input} value={pk.stock} onChangeText={t => updatePack(i, 'stock', t)}
-                  placeholder="0" placeholderTextColor="#9ca3af" keyboardType="numeric" />
+                  placeholder="0" placeholderTextColor="#4a6fa5" keyboardType="numeric" />
               </View>
             ))}
 
@@ -381,7 +399,7 @@ export function ProductsScreen() {
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.5 }]} onPress={handleSave} disabled={saving}>
-                {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>{editingId ? 'Actualizar' : 'Crear producto'}</Text>}
+                {saving ? <ActivityIndicator color="#0F0F0F" /> : <Text style={styles.saveBtnText}>{editingId ? 'Actualizar' : 'Crear producto'}</Text>}
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -393,7 +411,7 @@ export function ProductsScreen() {
         <View style={[styles.overlay, { justifyContent: 'center' }]}>
           <View style={styles.stockBox}>
             <Text style={styles.modalTitle}>Agregar stock</Text>
-            <Text style={{ color: '#6b7280', fontSize: 13, marginTop: 4, marginBottom: 16 }}>
+            <Text style={{ color: '#94a3b8', fontSize: 13, marginTop: 4, marginBottom: 16 }}>
               {stockModal?.productName} — {stockModal?.packName}{'\n'}Stock actual: {stockModal?.current}
             </Text>
             <TextInput style={styles.input} value={stockQty} onChangeText={setStockQty}
@@ -403,7 +421,7 @@ export function ProductsScreen() {
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.saveBtn, stockSaving && { opacity: 0.5 }]} onPress={handleStockAdd} disabled={stockSaving}>
-                {stockSaving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>+ Agregar</Text>}
+                {stockSaving ? <ActivityIndicator color="#0F0F0F" /> : <Text style={styles.saveBtnText}>+ Agregar</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -433,61 +451,62 @@ export function ProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6' },
-  topBar: { flexDirection: 'row', padding: 12, gap: 8, alignItems: 'center' },
-  filterBar: { paddingHorizontal: 12, paddingBottom: 8 },
-  description: { fontSize: 11, color: '#9ca3af', marginTop: 2, fontStyle: 'italic' },
-  searchInput: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
-  addBtn: { backgroundColor: '#2563eb', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
-  addBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  card: { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 10, elevation: 2 },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
-  productName: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  sku: { fontSize: 11, color: '#6b7280', marginTop: 2 },
-  category: { fontSize: 11, color: '#6b7280', marginTop: 1 },
-  cardActions: { flexDirection: 'row', gap: 6 },
-  editBtn: { backgroundColor: '#eff6ff', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
-  editBtnText: { fontSize: 12, color: '#2563eb', fontWeight: '600' },
-  delBtn: { backgroundColor: '#fef2f2', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
-  delBtnText: { fontSize: 16, color: '#ef4444', fontWeight: '700' },
-  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5, borderTopWidth: 1, borderTopColor: '#f3f4f6', flexWrap: 'wrap' },
-  packName: { fontSize: 12, fontWeight: '600', color: '#374151', width: 75 },
-  price: { fontSize: 12, fontWeight: '600' },
-  stockRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 'auto' },
-  stock: { fontSize: 12 },
-  stockBtn: { backgroundColor: '#dcfce7', borderRadius: 5, paddingHorizontal: 8, paddingVertical: 2 },
-  stockBtnText: { color: '#16a34a', fontWeight: '800', fontSize: 14 },
-  empty: { textAlign: 'center', color: '#9ca3af', marginTop: 40 },
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalBox: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
-  stockBox: { backgroundColor: '#fff', borderRadius: 16, margin: 24, padding: 20 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  modalTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
-  label: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6, marginTop: 12 },
-  subLabel: { fontSize: 12, fontWeight: '600', color: '#6b7280', marginBottom: 4, marginTop: 8 },
-  input: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
-  smallInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 8, fontSize: 13, color: '#111827', textAlign: 'center' },
-  chipRow: { flexDirection: 'row', gap: 6, paddingVertical: 2 },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4, marginBottom: 4 },
-  chip: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, minWidth: 64, alignItems: 'center' },
-  chipActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
-  chipText: { fontSize: 12, fontWeight: '600', color: '#374151' },
-  packHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 },
-  packBox: { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, padding: 12, marginTop: 8, backgroundColor: '#fafafa' },
+  container:     { flex: 1, backgroundColor: '#1E3557' },
+  topBar:        { flexDirection: 'row', padding: 12, gap: 8, alignItems: 'center' },
+  filterBar:     { paddingHorizontal: 12, paddingBottom: 8 },
+  description:   { fontSize: 11, color: '#64748b', marginTop: 2, fontStyle: 'italic' },
+  searchInput:   { flex: 1, backgroundColor: '#172A46', borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#e2e8f0' },
+  addBtn:        { backgroundColor: '#D4AF37', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
+  addBtnText:    { color: '#0F0F0F', fontWeight: '700', fontSize: 13 },
+  card:          { backgroundColor: '#243D66', borderRadius: 12, padding: 14, marginBottom: 10, elevation: 2 },
+  cardHeader:    { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
+  productName:   { fontSize: 15, fontWeight: '700', color: '#f1f5f9' },
+  sku:           { fontSize: 11, color: '#64748b', marginTop: 2 },
+  category:      { fontSize: 11, color: '#94a3b8', marginTop: 1 },
+  cardActions:   { flexDirection: 'row', gap: 6 },
+  editBtn:       { backgroundColor: 'rgba(212,175,55,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)' },
+  editBtnText:   { fontSize: 12, color: '#D4AF37', fontWeight: '600' },
+  delBtn:        { backgroundColor: 'rgba(239,68,68,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)' },
+  delBtnText:    { fontSize: 16, color: '#ef4444', fontWeight: '700' },
+  priceRow:      { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', flexWrap: 'wrap' },
+  packName:      { fontSize: 12, fontWeight: '600', color: '#cbd5e1', width: 75 },
+  price:         { fontSize: 12, fontWeight: '600' },
+  stockRow:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 'auto' },
+  stock:         { fontSize: 12 },
+  stockBtn:      { backgroundColor: 'rgba(34,197,94,0.15)', borderRadius: 5, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: 'rgba(34,197,94,0.3)' },
+  stockBtnText:  { color: '#4ade80', fontWeight: '800', fontSize: 14 },
+  empty:         { textAlign: 'center', color: '#64748b', marginTop: 40 },
+  chipRow:       { flexDirection: 'row', gap: 8, paddingVertical: 4 },
+  chipWrap:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4, marginBottom: 4 },
+  chip:          { borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: '#172A46' },
+  chipActive:    { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
+  chipText:      { fontSize: 12, fontWeight: '600', color: '#94a3b8' },
+  chipTextActive:{ color: '#0F0F0F' },
+  overlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  modalBox:      { backgroundColor: '#1E3557', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
+  stockBox:      { backgroundColor: '#243D66', borderRadius: 16, margin: 24, padding: 20 },
+  modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  modalTitle:    { fontSize: 17, fontWeight: '700', color: '#f1f5f9' },
+  label:         { fontSize: 13, fontWeight: '600', color: '#D4AF37', marginBottom: 6, marginTop: 12 },
+  subLabel:      { fontSize: 12, fontWeight: '600', color: '#94a3b8', marginBottom: 4, marginTop: 8 },
+  input:         { backgroundColor: '#172A46', borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#e2e8f0' },
+  smallInput:    { backgroundColor: '#172A46', borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 8, fontSize: 13, color: '#e2e8f0', textAlign: 'center' },
+  packHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 },
+  packBox:       { borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 10, padding: 12, marginTop: 8, backgroundColor: '#172A46' },
   packBoxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  packBoxTitle: { fontSize: 13, fontWeight: '700', color: '#374151' },
-  priceGrid: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  modalBtns: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  cancelBtn: { flex: 1, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, padding: 13, alignItems: 'center' },
-  cancelBtnText: { fontSize: 14, fontWeight: '600', color: '#374151' },
-  saveBtn: { flex: 1, backgroundColor: '#2563eb', borderRadius: 10, padding: 13, alignItems: 'center' },
-  saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  skuRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  skuBtn: { backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 10, padding: 10, alignItems: 'center', justifyContent: 'center' },
-  skuBtnText: { fontSize: 18, color: '#2563eb' },
-  scanOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  scanFrame: { width: 260, height: 160, borderWidth: 3, borderColor: '#fff', borderRadius: 12, marginBottom: 24 },
-  scanHint: { color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 32, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  scanCloseBtn: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 32, paddingVertical: 12 },
-  scanCloseBtnText: { color: '#111827', fontWeight: '700', fontSize: 15 },
+  packBoxTitle:  { fontSize: 13, fontWeight: '700', color: '#cbd5e1' },
+  priceGrid:     { flexDirection: 'row', gap: 8, marginTop: 4 },
+  modalBtns:     { flexDirection: 'row', gap: 10, marginTop: 20 },
+  cancelBtn:     { flex: 1, borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 10, padding: 13, alignItems: 'center' },
+  cancelBtnText: { fontSize: 14, fontWeight: '600', color: '#94a3b8' },
+  saveBtn:       { flex: 1, backgroundColor: '#D4AF37', borderRadius: 10, padding: 13, alignItems: 'center' },
+  saveBtnText:   { color: '#0F0F0F', fontSize: 14, fontWeight: '700' },
+  skuRow:        { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  skuBtn:        { backgroundColor: 'rgba(212,175,55,0.1)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)', borderRadius: 10, padding: 10, alignItems: 'center', justifyContent: 'center' },
+  skuBtnText:    { fontSize: 18, color: '#D4AF37' },
+  scanOverlay:   { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  scanFrame:     { width: 260, height: 160, borderWidth: 3, borderColor: '#D4AF37', borderRadius: 12, marginBottom: 24 },
+  scanHint:      { color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 32, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  scanCloseBtn:  { backgroundColor: '#D4AF37', borderRadius: 10, paddingHorizontal: 32, paddingVertical: 12 },
+  scanCloseBtnText: { color: '#0F0F0F', fontWeight: '700', fontSize: 15 },
 })
