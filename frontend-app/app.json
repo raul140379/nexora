@@ -27,8 +27,17 @@
         "android.permission.RECORD_AUDIO"
       ]
     },
-    "plugins": [],
+    "plugins": [
+      "expo-updates"
+    ],
     "scheme": "nexora",
+    "updates": {
+      "url": "https://u.expo.dev/19d258d4-4130-40d5-b032-606eab9bb898",
+      "checkAutomatically": "ON_LOAD"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "experiments": {
       "newArchEnabled": false
     },
