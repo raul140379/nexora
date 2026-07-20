@@ -21,9 +21,9 @@ interface Product { id: number; name: string }
 
 const STATUS_LABEL = { pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada' }
 const STATUS_COLOR = {
-  pending:   { bg: '#fef9c3', text: '#854d0e' },
-  completed: { bg: '#dcfce7', text: '#166534' },
-  cancelled: { bg: '#fee2e2', text: '#991b1b' },
+  pending:   { bg: 'rgba(251,191,36,0.15)',  text: '#fbbf24' },
+  completed: { bg: 'rgba(74,222,128,0.15)',  text: '#4ade80' },
+  cancelled: { bg: 'rgba(248,113,113,0.15)', text: '#f87171' },
 }
 
 const fmt = (v: number) => `$${Number(v).toFixed(2)}`
@@ -71,20 +71,20 @@ export function SalesHistoryScreen() {
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: '#16a34a', fontSize: 16 }]}>{fmt(totalRevenue)}</Text>
+          <Text style={[styles.summaryValue, { color: '#4ade80', fontSize: 16 }]}>{fmt(totalRevenue)}</Text>
           <Text style={styles.summaryLabel}>Total cobrado</Text>
         </View>
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color="#D4AF37" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           data={sales}
           keyExtractor={s => String(s.id)}
           ListEmptyComponent={<Text style={styles.empty}>Sin ventas registradas</Text>}
           contentContainerStyle={{ padding: 12, paddingBottom: 30 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} colors={['#2563eb']} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} colors={['#D4AF37']} tintColor="#D4AF37" />}
           renderItem={({ item: s }) => {
             const sc = STATUS_COLOR[s.status]
             const isExpanded = expandedId === s.id
@@ -138,29 +138,29 @@ export function SalesHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6' },
-  summary: { flexDirection: 'row', backgroundColor: '#fff', marginHorizontal: 12, marginTop: 12, borderRadius: 12, padding: 14, elevation: 2, alignItems: 'center' },
-  summaryItem: { flex: 1, alignItems: 'center' },
-  summaryDivider: { width: 1, height: 36, backgroundColor: '#e5e7eb' },
-  summaryValue: { fontSize: 20, fontWeight: '800', color: '#111827' },
-  summaryLabel: { fontSize: 11, color: '#6b7280', marginTop: 2 },
-  card: { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 10, elevation: 2 },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },
-  saleId: { fontSize: 14, fontWeight: '700', color: '#111827' },
-  saleDate: { fontSize: 12, color: '#6b7280', marginTop: 2 },
-  itemCount: { fontSize: 11, color: '#9ca3af', marginTop: 1 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
-  statusText: { fontSize: 11, fontWeight: '600' },
-  totalAmt: { fontSize: 18, fontWeight: '800', color: '#2563eb' },
-  discountBadge: { fontSize: 11, color: '#ea580c' },
-  expandHint: { fontSize: 12, color: '#9ca3af', textAlign: 'center', paddingTop: 2 },
-  detail: { borderTopWidth: 1, borderTopColor: '#f3f4f6', marginTop: 8, paddingTop: 8 },
-  itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f9fafb' },
-  itemName: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  itemMeta: { fontSize: 11, color: '#6b7280', marginTop: 1 },
-  itemQty: { fontSize: 14, fontWeight: '700', color: '#374151', marginHorizontal: 10 },
-  itemSubtotal: { fontSize: 13, fontWeight: '700', color: '#111827' },
-  itemUnit: { fontSize: 11, color: '#9ca3af' },
-  notes: { fontSize: 12, color: '#6b7280', fontStyle: 'italic', marginTop: 8 },
-  empty: { textAlign: 'center', color: '#9ca3af', marginTop: 40 },
+  container:      { flex: 1, backgroundColor: '#1E3557' },
+  summary:        { flexDirection: 'row', backgroundColor: '#243D66', marginHorizontal: 12, marginTop: 12, borderRadius: 12, padding: 14, elevation: 2, alignItems: 'center' },
+  summaryItem:    { flex: 1, alignItems: 'center' },
+  summaryDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.1)' },
+  summaryValue:   { fontSize: 20, fontWeight: '800', color: '#f1f5f9' },
+  summaryLabel:   { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+  card:           { backgroundColor: '#243D66', borderRadius: 12, padding: 14, marginBottom: 10, elevation: 2 },
+  cardHeader:     { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },
+  saleId:         { fontSize: 14, fontWeight: '700', color: '#f1f5f9' },
+  saleDate:       { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  itemCount:      { fontSize: 11, color: '#64748b', marginTop: 1 },
+  statusBadge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+  statusText:     { fontSize: 11, fontWeight: '600' },
+  totalAmt:       { fontSize: 18, fontWeight: '800', color: '#D4AF37' },
+  discountBadge:  { fontSize: 11, color: '#fb923c' },
+  expandHint:     { fontSize: 12, color: '#64748b', textAlign: 'center', paddingTop: 2 },
+  detail:         { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', marginTop: 8, paddingTop: 8 },
+  itemRow:        { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  itemName:       { fontSize: 13, fontWeight: '600', color: '#e2e8f0' },
+  itemMeta:       { fontSize: 11, color: '#94a3b8', marginTop: 1 },
+  itemQty:        { fontSize: 14, fontWeight: '700', color: '#cbd5e1', marginHorizontal: 10 },
+  itemSubtotal:   { fontSize: 13, fontWeight: '700', color: '#D4AF37' },
+  itemUnit:       { fontSize: 11, color: '#64748b' },
+  notes:          { fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginTop: 8 },
+  empty:          { textAlign: 'center', color: '#64748b', marginTop: 40 },
 })

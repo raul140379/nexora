@@ -9,7 +9,7 @@ interface SaleItem { product_id: number; pack_price_id: number; product_name: st
 
 type Tier = 'a' | 'b' | 'c'
 const TIER_LABELS: Record<Tier, string> = { a: 'Precio A', b: 'Precio B', c: 'Precio C' }
-const TIER_COLORS: Record<Tier, string> = { a: '#2563eb', b: '#16a34a', c: '#ea580c' }
+const TIER_COLORS: Record<Tier, string> = { a: '#60a5fa', b: '#4ade80', c: '#fb923c' }
 
 export function SalesScreen({ navigation }: any) {
   const [products, setProducts] = useState<Product[]>([])
@@ -97,7 +97,7 @@ export function SalesScreen({ navigation }: any) {
         <Text style={styles.sectionTitle}>Agregar producto</Text>
         <View style={styles.searchRow}>
           <TextInput style={[styles.searchInput, { flex: 1 }]} placeholder="Buscar por nombre o código..."
-            placeholderTextColor="#9ca3af" value={search}
+            placeholderTextColor="#4a6fa5" value={search}
             onChangeText={t => { setSearch(t); setShowResults(true); if (!t) setSelProduct(null) }} />
           <TouchableOpacity style={styles.scanBtn} onPress={openScanner}>
             <Text style={styles.scanBtnText}>📷</Text>
@@ -118,15 +118,14 @@ export function SalesScreen({ navigation }: any) {
 
         {selProduct && selPack && (
           <View style={{ marginTop: 12 }}>
-            {/* Empaques */}
             <Text style={styles.label}>Empaque</Text>
             <View style={styles.chipWrap}>
               {selProduct.prices.map(pr => (
                 <TouchableOpacity key={pr.id}
                   style={[styles.chip, selPack.id === pr.id && styles.chipActive]}
                   onPress={() => setSelPack(pr)}>
-                  <Text style={[styles.chipText, selPack.id === pr.id && { color: '#fff' }]}>{pr.pack_name}</Text>
-                  <Text style={[styles.chipStock, selPack.id === pr.id && { color: '#bfdbfe' }, pr.stock === 0 && { color: '#fca5a5' }]}>
+                  <Text style={[styles.chipText, selPack.id === pr.id && styles.chipTextActive]}>{pr.pack_name}</Text>
+                  <Text style={[styles.chipStock, selPack.id === pr.id && { color: 'rgba(15,15,15,0.6)' }, pr.stock === 0 && { color: '#f87171' }]}>
                     Stock: {pr.stock}
                   </Text>
                 </TouchableOpacity>
@@ -134,28 +133,29 @@ export function SalesScreen({ navigation }: any) {
             </View>
 
             {selPack.stock === 0 && (
-              <View style={styles.alertRed}><Text style={{ color: '#dc2626', fontWeight: '600' }}>⛔ Sin stock para {selPack.pack_name}</Text></View>
+              <View style={styles.alertRed}>
+                <Text style={{ color: '#f87171', fontWeight: '600' }}>⛔ Sin stock para {selPack.pack_name}</Text>
+              </View>
             )}
 
-            {/* Precios A/B/C */}
             <Text style={styles.label}>Precio</Text>
             <View style={styles.tierRow}>
               {(['a', 'b', 'c'] as Tier[]).map(t => {
                 const pr = getPrice(selPack, t)
                 if (pr == null) return null
                 return (
-                  <TouchableOpacity key={t} style={[styles.tierBtn, selTier === t && { backgroundColor: TIER_COLORS[t], borderColor: TIER_COLORS[t] }]}
+                  <TouchableOpacity key={t}
+                    style={[styles.tierBtn, selTier === t && { backgroundColor: TIER_COLORS[t], borderColor: TIER_COLORS[t] }]}
                     onPress={() => setSelTier(t)}>
-                    <Text style={[styles.tierLabel, selTier === t && { color: '#fff' }]}>{TIER_LABELS[t]}</Text>
-                    <Text style={[styles.tierPrice, { color: selTier === t ? '#fff' : TIER_COLORS[t] }]}>${Number(pr).toFixed(2)}</Text>
+                    <Text style={[styles.tierLabel, selTier === t && { color: '#0F0F0F' }]}>{TIER_LABELS[t]}</Text>
+                    <Text style={[styles.tierPrice, { color: selTier === t ? '#0F0F0F' : TIER_COLORS[t] }]}>${Number(pr).toFixed(2)}</Text>
                   </TouchableOpacity>
                 )
               })}
             </View>
 
-            {/* Cantidad + Agregar */}
             <View style={styles.addRow}>
-              <TextInput style={styles.qtyInput} value={qty} onChangeText={setQty} keyboardType="numeric" placeholder="1" />
+              <TextInput style={styles.qtyInput} value={qty} onChangeText={setQty} keyboardType="numeric" placeholder="1" placeholderTextColor="#4a6fa5" />
               <TouchableOpacity style={[styles.addBtn, selPack.stock === 0 && { opacity: 0.4 }]}
                 onPress={addItem} disabled={selPack.stock === 0}>
                 <Text style={styles.addBtnText}>+ Agregar</Text>
@@ -189,8 +189,9 @@ export function SalesScreen({ navigation }: any) {
       <View style={styles.section}>
         <View style={styles.discountRow}>
           <Text style={styles.label}>Descuento %</Text>
-          <TextInput style={styles.discountInput} value={discount} onChangeText={setDiscount} keyboardType="numeric" />
-          {parseFloat(discount) > 0 && <Text style={{ color: '#ea580c' }}>−${discountAmt.toFixed(2)}</Text>}
+          <TextInput style={styles.discountInput} value={discount} onChangeText={setDiscount}
+            keyboardType="numeric" placeholderTextColor="#4a6fa5" />
+          {parseFloat(discount) > 0 && <Text style={{ color: '#fb923c' }}>−${discountAmt.toFixed(2)}</Text>}
         </View>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total</Text>
@@ -198,12 +199,13 @@ export function SalesScreen({ navigation }: any) {
         </View>
         <TouchableOpacity style={[styles.saveBtn, (!items.length || saving) && { opacity: 0.5 }]}
           onPress={handleSave} disabled={!items.length || saving}>
-          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Confirmar venta · ${total.toFixed(2)}</Text>}
+          {saving ? <ActivityIndicator color="#0F0F0F" /> : <Text style={styles.saveBtnText}>Confirmar venta · ${total.toFixed(2)}</Text>}
         </TouchableOpacity>
         <TouchableOpacity style={styles.historyBtn} onPress={() => navigation.navigate('SalesHistory')}>
           <Text style={styles.historyBtnText}>Ver historial de ventas</Text>
         </TouchableOpacity>
       </View>
+
       <Modal visible={scannerOpen} animationType="slide" onRequestClose={() => setScannerOpen(false)}>
         <View style={{ flex: 1, backgroundColor: '#000' }}>
           <CameraView
@@ -226,49 +228,50 @@ export function SalesScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f3f4f6' },
-  section: { backgroundColor: '#fff', margin: 12, borderRadius: 14, padding: 14, elevation: 2 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 },
-  searchRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4 },
-  searchInput: { backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827' },
-  scanBtn: { backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 10, padding: 10, alignItems: 'center', justifyContent: 'center' },
-  scanBtnText: { fontSize: 20 },
-  scanOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  scanFrame: { width: 260, height: 160, borderWidth: 3, borderColor: '#fff', borderRadius: 12, marginBottom: 24 },
-  scanHint: { color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 32, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  scanCloseBtn: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 32, paddingVertical: 12 },
-  scanCloseBtnText: { color: '#111827', fontWeight: '700', fontSize: 15 },
-  results: { marginTop: 4, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, overflow: 'hidden' },
-  resultItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  resultName: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  resultSku: { fontSize: 11, color: '#6b7280' },
-  label: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6, marginTop: 10 },
-  chip: { borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginRight: 8, alignItems: 'center' },
-  chipActive: { backgroundColor: '#2563eb', borderColor: '#2563eb' },
-  chipText: { fontSize: 13, fontWeight: '600', color: '#374151' },
-  chipStock: { fontSize: 11, color: '#6b7280', marginTop: 2 },
-  alertRed: { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fca5a5', borderRadius: 8, padding: 10, marginBottom: 6 },
-  tierRow: { flexDirection: 'row', gap: 8 },
-  tierBtn: { flex: 1, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, padding: 10, alignItems: 'center' },
-  tierLabel: { fontSize: 11, fontWeight: '600', color: '#374151' },
-  tierPrice: { fontSize: 14, fontWeight: '700', marginTop: 2 },
-  addRow: { flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' },
-  qtyInput: { width: 64, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 10, textAlign: 'center', fontSize: 16, fontWeight: '700' },
-  addBtn: { flex: 1, backgroundColor: '#2563eb', borderRadius: 8, padding: 12, alignItems: 'center' },
-  addBtnText: { color: '#fff', fontWeight: '700' },
-  itemRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  itemName: { fontSize: 13, fontWeight: '600', color: '#111827' },
-  itemDetail: { fontSize: 11, color: '#6b7280' },
-  itemQty: { fontSize: 14, color: '#374151', marginHorizontal: 8 },
-  itemTotal: { fontSize: 14, fontWeight: '700', color: '#111827' },
-  discountRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  discountInput: { width: 70, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 8, textAlign: 'center', fontSize: 15 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  totalLabel: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  totalValue: { fontSize: 28, fontWeight: '800', color: '#2563eb' },
-  saveBtn: { backgroundColor: '#2563eb', borderRadius: 12, padding: 16, alignItems: 'center' },
-  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  historyBtn: { marginTop: 10, padding: 12, alignItems: 'center' },
-  historyBtnText: { color: '#6b7280', fontSize: 13, fontWeight: '600' },
+  container:       { flex: 1, backgroundColor: '#1E3557' },
+  section:         { backgroundColor: '#243D66', margin: 12, borderRadius: 14, padding: 14, elevation: 2 },
+  sectionTitle:    { fontSize: 15, fontWeight: '700', color: '#f1f5f9', marginBottom: 10 },
+  searchRow:       { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  searchInput:     { backgroundColor: '#172A46', borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#e2e8f0' },
+  scanBtn:         { backgroundColor: 'rgba(212,175,55,0.1)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)', borderRadius: 10, padding: 10, alignItems: 'center', justifyContent: 'center' },
+  scanBtnText:     { fontSize: 20 },
+  results:         { marginTop: 4, borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 10, overflow: 'hidden', backgroundColor: '#172A46' },
+  resultItem:      { padding: 12, borderBottomWidth: 1, borderBottomColor: '#2d4a6e', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  resultName:      { fontSize: 14, fontWeight: '600', color: '#f1f5f9' },
+  resultSku:       { fontSize: 11, color: '#94a3b8' },
+  label:           { fontSize: 13, fontWeight: '600', color: '#D4AF37', marginBottom: 6, marginTop: 10 },
+  chipWrap:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4 },
+  chip:            { borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', backgroundColor: '#172A46' },
+  chipActive:      { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
+  chipText:        { fontSize: 13, fontWeight: '600', color: '#cbd5e1' },
+  chipTextActive:  { color: '#0F0F0F' },
+  chipStock:       { fontSize: 11, color: '#64748b', marginTop: 2 },
+  alertRed:        { backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)', borderRadius: 8, padding: 10, marginBottom: 6 },
+  tierRow:         { flexDirection: 'row', gap: 8 },
+  tierBtn:         { flex: 1, borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 8, padding: 10, alignItems: 'center', backgroundColor: '#172A46' },
+  tierLabel:       { fontSize: 11, fontWeight: '600', color: '#94a3b8' },
+  tierPrice:       { fontSize: 14, fontWeight: '700', marginTop: 2 },
+  addRow:          { flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' },
+  qtyInput:        { width: 64, borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 8, padding: 10, textAlign: 'center', fontSize: 16, fontWeight: '700', backgroundColor: '#172A46', color: '#e2e8f0' },
+  addBtn:          { flex: 1, backgroundColor: '#D4AF37', borderRadius: 8, padding: 12, alignItems: 'center' },
+  addBtnText:      { color: '#0F0F0F', fontWeight: '700' },
+  itemRow:         { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
+  itemName:        { fontSize: 13, fontWeight: '600', color: '#f1f5f9' },
+  itemDetail:      { fontSize: 11, color: '#94a3b8' },
+  itemQty:         { fontSize: 14, color: '#cbd5e1', marginHorizontal: 8 },
+  itemTotal:       { fontSize: 14, fontWeight: '700', color: '#D4AF37' },
+  discountRow:     { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  discountInput:   { width: 70, borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 8, padding: 8, textAlign: 'center', fontSize: 15, backgroundColor: '#172A46', color: '#e2e8f0' },
+  totalRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  totalLabel:      { fontSize: 18, fontWeight: '700', color: '#f1f5f9' },
+  totalValue:      { fontSize: 28, fontWeight: '800', color: '#D4AF37' },
+  saveBtn:         { backgroundColor: '#D4AF37', borderRadius: 12, padding: 16, alignItems: 'center' },
+  saveBtnText:     { color: '#0F0F0F', fontSize: 16, fontWeight: '800' },
+  historyBtn:      { marginTop: 10, padding: 12, alignItems: 'center' },
+  historyBtnText:  { color: '#64748b', fontSize: 13, fontWeight: '600' },
+  scanOverlay:     { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  scanFrame:       { width: 260, height: 160, borderWidth: 3, borderColor: '#D4AF37', borderRadius: 12, marginBottom: 24 },
+  scanHint:        { color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 32, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  scanCloseBtn:    { backgroundColor: '#D4AF37', borderRadius: 10, paddingHorizontal: 32, paddingVertical: 12 },
+  scanCloseBtnText:{ color: '#0F0F0F', fontWeight: '700', fontSize: 15 },
 })
