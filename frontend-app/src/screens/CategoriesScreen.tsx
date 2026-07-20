@@ -49,10 +49,14 @@ export function CategoriesScreen() {
       const payload = { name: catForm.name.trim(), description: catForm.description.trim() || null }
       if (editingCatId) { await api.put(`/categories/${editingCatId}`, payload) }
       else { await api.post('/categories', payload) }
-      setShowCatModal(false); load()
+      setShowCatModal(false)
+      Alert.alert('✓ Guardado', editingCatId ? 'Categoría actualizada correctamente' : 'Categoría creada correctamente')
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.detail || 'Error al guardar')
-    } finally { setSavingCat(false) }
+    } finally {
+      setSavingCat(false)
+      load()
+    }
   }
 
   const handleDeleteCat = (c: Category) => {
@@ -74,10 +78,14 @@ export function CategoriesScreen() {
     try {
       if (editingSubId) { await api.put(`/subcategories/${editingSubId}`, { name: subForm.name.trim() }) }
       else { await api.post('/subcategories', { name: subForm.name.trim(), category_id: subForm.category_id }) }
-      setShowSubModal(false); load()
+      setShowSubModal(false)
+      Alert.alert('✓ Guardado', editingSubId ? 'Subcategoría actualizada correctamente' : 'Subcategoría creada correctamente')
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.detail || 'Error al guardar')
-    } finally { setSavingSub(false) }
+    } finally {
+      setSavingSub(false)
+      load()
+    }
   }
 
   const handleDeleteSub = (s: Subcategory) => {
