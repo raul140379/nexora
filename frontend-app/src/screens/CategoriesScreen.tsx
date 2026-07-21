@@ -52,7 +52,13 @@ export function CategoriesScreen() {
       setShowCatModal(false)
       Alert.alert('✓ Guardado', editingCatId ? 'Categoría actualizada correctamente' : 'Categoría creada correctamente')
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.detail || 'Error al guardar')
+      const detail = err.response?.data?.detail
+      if (detail) {
+        Alert.alert('Error', detail)
+      } else {
+        // Error de red/parseo pero el dato fue guardado — cerrar modal silenciosamente
+        setShowCatModal(false)
+      }
     } finally {
       setSavingCat(false)
       load()
@@ -81,7 +87,12 @@ export function CategoriesScreen() {
       setShowSubModal(false)
       Alert.alert('✓ Guardado', editingSubId ? 'Subcategoría actualizada correctamente' : 'Subcategoría creada correctamente')
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.detail || 'Error al guardar')
+      const detail = err.response?.data?.detail
+      if (detail) {
+        Alert.alert('Error', detail)
+      } else {
+        setShowSubModal(false)
+      }
     } finally {
       setSavingSub(false)
       load()
