@@ -46,15 +46,15 @@ export function HomeScreen({ navigation }: any) {
   ]
 
   const menuItems = [
-    { label: 'Nueva venta',   screen: 'Sales',        show: true },
-    { label: 'Historial',     screen: 'SalesHistory', show: true },
-    { label: 'Productos',     screen: 'Products',     show: true },
-    { label: 'Clientes',      screen: 'Customers',    show: has('view_customers') },
-    { label: 'Categorías',    screen: 'Categories',   show: has('manage_categories') },
-    { label: 'Usuarios',      screen: 'Users',        show: role === 'admin' },
-    { label: 'Permisos',      screen: 'Permissions',  show: role === 'admin' },
+    { label: 'Nueva venta',   screen: 'Sales',          show: has('create_sales') },
+    { label: 'Historial',     screen: 'SalesHistory',   show: true },
+    { label: 'Productos',     screen: 'Products',       show: true },
+    { label: 'Clientes',      screen: 'Customers',      show: has('view_customers') },
+    { label: 'Categorías',    screen: 'Categories',     show: has('manage_categories') },
+    { label: 'Usuarios',      screen: 'Users',          show: role === 'admin' },
+    { label: 'Permisos',      screen: 'Permissions',    show: role === 'admin' },
+    { label: 'Reportes',      screen: 'Reports',        show: has('view_reports') },
     { label: 'Mi contraseña', screen: 'ChangePassword', show: true },
-    { label: 'Reportes',      screen: 'Reports',        show: has('view_customers') || role === 'admin' || role === 'ejecutivo' },
   ]
 
   return (

@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { api } from '../services/api'
+import { usePermissionsStore } from '../store/permissions.store'
 
 interface SaleItem { product_id: number; quantity: number; subtotal: number }
 interface Sale {
@@ -49,6 +50,9 @@ const hStyles = StyleSheet.create({
 })
 
 export function ReportsScreen() {
+  const { has } = usePermissionsStore()
+  const canViewRevenue = has('view_revenue')
+
   const [sales, setSales]       = useState<Sale[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading]   = useState(true)
@@ -131,22 +135,28 @@ export function ReportsScreen() {
         <>
           {/* KPIs */}
           <View style={styles.kpiGrid}>
-            <View style={[styles.kpiCard, { borderTopColor: '#D4AF37' }]}>
-              <Text style={[styles.kpiValue, { color: '#D4AF37' }]}>{fmt(totalRevenue)}</Text>
-              <Text style={styles.kpiLabel}>Ingresos</Text>
-            </View>
+            {canViewRevenue && (
+              <View style={[styles.kpiCard, { borderTopColor: '#D4AF37' }]}>
+                <Text style={[styles.kpiValue, { color: '#D4AF37' }]}>{fmt(totalRevenue)}</Text>
+                <Text style={styles.kpiLabel}>Ingresos</Text>
+              </View>
+            )}
             <View style={[styles.kpiCard, { borderTopColor: '#4ade80' }]}>
               <Text style={[styles.kpiValue, { color: '#4ade80' }]}>{completed.length}</Text>
               <Text style={styles.kpiLabel}>Completadas</Text>
             </View>
-            <View style={[styles.kpiCard, { borderTopColor: '#60a5fa' }]}>
-              <Text style={[styles.kpiValue, { color: '#60a5fa' }]}>{fmt(avgTicket)}</Text>
-              <Text style={styles.kpiLabel}>Ticket prom.</Text>
-            </View>
-            <View style={[styles.kpiCard, { borderTopColor: '#a78bfa' }]}>
-              <Text style={[styles.kpiValue, { color: '#a78bfa' }]}>{fmt(maxTicket)}</Text>
-              <Text style={styles.kpiLabel}>Ticket máx.</Text>
-            </View>
+            {canViewRevenue && (
+              <View style={[styles.kpiCard, { borderTopColor: '#60a5fa' }]}>
+                <Text style={[styles.kpiValue, { color: '#60a5fa' }]}>{fmt(avgTicket)}</Text>
+                <Text style={styles.kpiLabel}>Ticket prom.</Text>
+              </View>
+            )}
+            {canViewRevenue && (
+              <View style={[styles.kpiCard, { borderTopColor: '#a78bfa' }]}>
+                <Text style={[styles.kpiValue, { color: '#a78bfa' }]}>{fmt(maxTicket)}</Text>
+                <Text style={styles.kpiLabel}>Ticket máx.</Text>
+              </View>
+            )}
           </View>
 
           {/* Distribución de estados */}
@@ -191,7 +201,7 @@ export function ReportsScreen() {
           </View>
 
           {/* Ingresos últimos 7 días */}
-          <View style={styles.section}>
+          {canViewRevenue && <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ingresos últimos 7 días</Text>
             <View style={styles.dailyChart}>
               {dailyValues.map((d, i) => {
@@ -207,7 +217,7 @@ export function ReportsScreen() {
                 )
               })}
             </View>
-          </View>
+          </View>}
         </>
       )}
     </ScrollView>

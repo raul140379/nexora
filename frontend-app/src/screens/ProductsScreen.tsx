@@ -6,6 +6,7 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { api } from '../services/api'
 import { useAuthStore } from '../store/auth.store'
+import { usePermissionsStore } from '../store/permissions.store'
 import { getNameEmoji } from '../utils/helpers'
 
 interface PackPrice { id: number; pack_name: string; price_a: number; price_b: number | null; price_c: number | null; stock: number }
@@ -21,8 +22,9 @@ const fmt = (v: number | null) => v != null ? `$${Number(v).toFixed(2)}` : '—'
 
 export function ProductsScreen() {
   const { user } = useAuthStore()
+  const { has } = usePermissionsStore()
   const role = user?.role ?? 'vendedor'
-  const canEdit = role === 'admin' || role === 'ejecutivo'
+  const canEdit = has('edit_products')
 
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])

@@ -5,6 +5,8 @@ import {
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { api } from '../services/api'
+import { useAuthStore } from '../store/auth.store'
+import { usePermissionsStore } from '../store/permissions.store'
 
 interface SaleItem {
   id: number; product_id: number; quantity: number;
@@ -64,6 +66,11 @@ function isInPeriod(dateStr: string, period: string): boolean {
 }
 
 export function SalesHistoryScreen() {
+  const { user } = useAuthStore()
+  const { has } = usePermissionsStore()
+  const canViewAll     = has('view_all_sales')
+  const canViewRevenue = has('view_revenue')
+
   const [sales, setSales] = useState<Sale[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -114,6 +121,7 @@ export function SalesHistoryScreen() {
   }
 
   const filtered = sales
+    .filter(s => canViewAll || s.user_id === user?.id)
     .filter(s => !filterStatus || s.status === filterStatus)
     .filter(s => isInPeriod(s.created_at, filterDate))
 
@@ -157,10 +165,12 @@ export function SalesHistoryScreen() {
           <Text style={styles.summaryLabel}>Ítems vendidos</Text>
         </View>
         <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={[styles.summaryValue, { color: '#4ade80', fontSize: 16 }]}>{fmt(totalRevenue)}</Text>
-          <Text style={styles.summaryLabel}>Total cobrado</Text>
-        </View>
+        {canViewRevenue && (
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryValue, { color: '#4ade80', fontSize: 16 }]}>{fmt(totalRevenue)}</Text>
+            <Text style={styles.summaryLabel}>Total cobrado</Text>
+          </View>
+        )}
       </View>
 
       {loading ? (
@@ -188,7 +198,7 @@ export function SalesHistoryScreen() {
                       <View style={[styles.statusBadge, { backgroundColor: sc.bg }]}>
                         <Text style={[styles.statusText, { color: sc.text }]}>{STATUS_LABEL[s.status]}</Text>
                       </View>
-                      <Text style={styles.totalAmt}>{fmt(s.total)}</Text>
+                      {canViewRevenue && <Text style={styles.totalAmt}>{fmt(s.total)}</Text>}
                       {Number(s.discount_pct) > 0 && (
                         <Text style={styles.discountBadge}>−{Number(s.discount_pct)}% desc.</Text>
                       )}
