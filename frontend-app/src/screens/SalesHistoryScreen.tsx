@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, RefreshControl
+  ActivityIndicator, RefreshControl, Alert
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { api } from '../services/api'
@@ -38,6 +38,7 @@ export function SalesHistoryScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [updatingId, setUpdatingId] = useState<number | null>(null)
 
   const load = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true)
@@ -52,6 +53,32 @@ export function SalesHistoryScreen() {
 
   const getProductName = (productId: number) =>
     products.find(p => p.id === productId)?.name ?? `Producto #${productId}`
+
+  const changeStatus = (sale: Sale, newStatus: 'completed' | 'cancelled') => {
+    const label = newStatus === 'completed' ? 'completar' : 'cancelar'
+    Alert.alert(
+      `¿${newStatus === 'completed' ? 'Completar' : 'Cancelar'} venta?`,
+      `¿Confirmás ${label} la Venta #${sale.id}?`,
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Sí', onPress: async () => {
+            setUpdatingId(sale.id)
+            try {
+              await api.patch(`/sales/${sale.id}`, { status: newStatus })
+              setSales(prev => prev.map(s =>
+                s.id === sale.id ? { ...s, status: newStatus } : s
+              ))
+            } catch (err: any) {
+              Alert.alert('Error', err.response?.data?.detail || 'No se pudo actualizar')
+            } finally {
+              setUpdatingId(null)
+            }
+          }
+        }
+      ]
+    )
+  }
 
   const totalItems = sales.reduce((s, v) => s + v.items.length, 0)
   const totalRevenue = sales.filter(s => s.status === 'completed').reduce((s, v) => s + Number(v.total), 0)
@@ -126,6 +153,23 @@ export function SalesHistoryScreen() {
                       </View>
                     ))}
                     {s.notes ? <Text style={styles.notes}>📝 {s.notes}</Text> : null}
+
+                    {s.status === 'pending' && (
+                      <View style={styles.actionRow}>
+                        {updatingId === s.id ? (
+                          <ActivityIndicator color="#D4AF37" style={{ marginTop: 8 }} />
+                        ) : (
+                          <>
+                            <TouchableOpacity style={styles.completeBtn} onPress={() => changeStatus(s, 'completed')}>
+                              <Text style={styles.completeBtnText}>✓ Completar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.cancelBtn} onPress={() => changeStatus(s, 'cancelled')}>
+                              <Text style={styles.cancelBtnText}>✕ Cancelar</Text>
+                            </TouchableOpacity>
+                          </>
+                        )}
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
@@ -163,4 +207,9 @@ const styles = StyleSheet.create({
   itemUnit:       { fontSize: 11, color: '#64748b' },
   notes:          { fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginTop: 8 },
   empty:          { textAlign: 'center', color: '#64748b', marginTop: 40 },
+  actionRow:      { flexDirection: 'row', gap: 8, marginTop: 12 },
+  completeBtn:    { flex: 1, backgroundColor: 'rgba(74,222,128,0.15)', borderWidth: 1, borderColor: 'rgba(74,222,128,0.4)', borderRadius: 8, padding: 10, alignItems: 'center' },
+  completeBtnText:{ fontSize: 13, fontWeight: '700', color: '#4ade80' },
+  cancelBtn:      { flex: 1, backgroundColor: 'rgba(248,113,113,0.15)', borderWidth: 1, borderColor: 'rgba(248,113,113,0.4)', borderRadius: 8, padding: 10, alignItems: 'center' },
+  cancelBtnText:  { fontSize: 13, fontWeight: '700', color: '#f87171' },
 })
