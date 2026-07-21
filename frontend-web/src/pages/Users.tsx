@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../services/api'
 import { ROLE_LABELS, UserRole } from '../store/auth.store'
+import { Pagination } from '../components/ui'
 import toast from 'react-hot-toast'
 
 interface UserData {
@@ -34,6 +35,8 @@ const EMPTY = { email: '', username: '', full_name: '', password: '', role: 'ven
 export function Users() {
   const [users, setUsers] = useState<UserData[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 20
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(EMPTY)
@@ -46,7 +49,7 @@ export function Users() {
 
   const load = () => {
     setLoading(true)
-    api.get('/users').then(r => { setUsers(r.data); setLoading(false) })
+    api.get('/users').then(r => { setUsers(r.data); setPage(1); setLoading(false) })
   }
 
   useEffect(() => { load() }, [])
@@ -141,7 +144,7 @@ export function Users() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {users.map(u => (
+            {users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(u => (
               <tr key={u.id} className="hover:bg-[#1E3557]">
                 <td className="px-4 py-3 font-medium text-gray-100">{u.full_name || '—'}</td>
                 <td className="px-4 py-3 text-[#6B7280] font-mono text-xs">@{u.username}</td>
@@ -178,6 +181,7 @@ export function Users() {
           </tbody>
         </table>
       </div>
+      <Pagination page={page} pageSize={PAGE_SIZE} total={users.length} onChange={setPage} />
 
       {/* Modal crear/editar */}
       {showModal && (

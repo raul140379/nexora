@@ -25,7 +25,9 @@ export function CustomersScreen() {
   const [editingId, setEditingId]   = useState<number | null>(null)
   const [form, setForm]             = useState(EMPTY)
   const [saving, setSaving]         = useState(false)
-  const [togglingId, setTogglingId] = useState<number | null>(null)
+  const [togglingId, setTogglingId]   = useState<number | null>(null)
+  const [visibleCount, setVisibleCount] = useState(20)
+  const PAGE_SIZE = 20
 
   const load = () => {
     setLoading(true)
@@ -42,6 +44,8 @@ export function CustomersScreen() {
       || (c.email ?? '').toLowerCase().includes(q)
       || (c.phone ?? '').includes(q)
   })
+  const visible = filtered.slice(0, visibleCount)
+  const hasMore = visibleCount < filtered.length
 
   const openCreate = () => { setEditingId(null); setForm(EMPTY); setShowModal(true) }
 
@@ -122,10 +126,19 @@ export function CustomersScreen() {
         <ActivityIndicator size="large" color="#D4AF37" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={filtered}
+          data={visible}
           keyExtractor={c => String(c.id)}
           ListEmptyComponent={<Text style={styles.empty}>Sin clientes registrados</Text>}
           contentContainerStyle={{ padding: 12, paddingBottom: 30 }}
+          onEndReached={() => hasMore && setVisibleCount(n => n + PAGE_SIZE)}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={hasMore ? (
+            <TouchableOpacity onPress={() => setVisibleCount(n => n + PAGE_SIZE)} style={{ alignItems: 'center', paddingVertical: 14 }}>
+              <Text style={{ color: '#D4AF37', fontSize: 13, fontWeight: '600' }}>
+                Cargar más ({filtered.length - visibleCount} restantes)
+              </Text>
+            </TouchableOpacity>
+          ) : null}
           renderItem={({ item: c }) => (
             <View style={styles.card}>
               <View style={styles.cardTop}>

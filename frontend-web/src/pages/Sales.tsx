@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../services/api'
 import { useAuthStore } from '../store/auth.store'
 import { usePermissionsStore } from '../store/permissions.store'
+import { Pagination } from '../components/ui'
 import toast from 'react-hot-toast'
 
 interface PackPrice { id: number; pack_name: string; units_per_pack: number; price_a: number; price_b: number | null; price_c: number | null; stock: number }
@@ -29,6 +30,8 @@ export function Sales() {
 
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 20
   const [showModal, setShowModal] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -51,7 +54,7 @@ export function Sales() {
   const [scanCode, setScanCode] = useState('')
   const scanRef = useRef<HTMLInputElement>(null)
 
-  const load = () => { setLoading(true); api.get('/sales').then(r => { setSales(r.data); setLoading(false) }) }
+  const load = () => { setLoading(true); api.get('/sales').then(r => { setSales(r.data); setPage(1); setLoading(false) }) }
   useEffect(() => { load() }, [])
 
   const openModal = () => {
@@ -196,7 +199,7 @@ export function Sales() {
           <tbody className="divide-y divide-white/10">
             {filtered.length === 0 ? (
               <tr><td colSpan={colCount} className="px-4 py-8 text-center text-[#6B7280]">Sin ventas registradas</td></tr>
-            ) : filtered.map(s => {
+            ) : filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(s => {
               const sub = s.items.reduce((acc, it) => acc + it.unit_price * it.quantity, 0)
               const isExpanded = expanded === s.id
               return (
@@ -272,6 +275,7 @@ export function Sales() {
           </tbody>
         </table>
       </div>
+      <Pagination page={page} pageSize={PAGE_SIZE} total={filtered.length} onChange={setPage} />
 
       {/* Modal nueva venta */}
       {showModal && (

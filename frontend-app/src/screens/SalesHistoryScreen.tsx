@@ -79,6 +79,8 @@ export function SalesHistoryScreen() {
   const [updatingId, setUpdatingId] = useState<number | null>(null)
   const [filterStatus, setFilterStatus] = useState('')
   const [filterDate, setFilterDate] = useState('')
+  const [visibleCount, setVisibleCount] = useState(20)
+  const PAGE_SIZE = 20
 
   const load = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true)
@@ -124,6 +126,8 @@ export function SalesHistoryScreen() {
     .filter(s => canViewAll || s.user_id === user?.id)
     .filter(s => !filterStatus || s.status === filterStatus)
     .filter(s => isInPeriod(s.created_at, filterDate))
+  const visible = filtered.slice(0, visibleCount)
+  const hasMore = visibleCount < filtered.length
 
   const totalItems   = filtered.reduce((s, v) => s + v.items.length, 0)
   const totalRevenue = filtered.filter(s => s.status === 'completed').reduce((s, v) => s + Number(v.total), 0)
@@ -177,11 +181,26 @@ export function SalesHistoryScreen() {
         <ActivityIndicator size="large" color="#D4AF37" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={filtered}
+          data={visible}
           keyExtractor={s => String(s.id)}
           ListEmptyComponent={<Text style={styles.empty}>Sin ventas registradas</Text>}
           contentContainerStyle={{ padding: 12, paddingBottom: 30 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} colors={['#D4AF37']} tintColor="#D4AF37" />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { load(true); setVisibleCount(PAGE_SIZE) }} colors={['#D4AF37']} tintColor="#D4AF37" />}
+          onEndReached={() => hasMore && setVisibleCount(c => c + PAGE_SIZE)}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={hasMore ? (
+            <TouchableOpacity
+              onPress={() => setVisibleCount(c => c + PAGE_SIZE)}
+              style={{ alignItems: 'center', paddingVertical: 14 }}>
+              <Text style={{ color: '#D4AF37', fontSize: 13, fontWeight: '600' }}>
+                Cargar más ({filtered.length - visibleCount} restantes)
+              </Text>
+            </TouchableOpacity>
+          ) : filtered.length > PAGE_SIZE ? (
+            <Text style={{ textAlign: 'center', color: '#4a6fa5', fontSize: 12, paddingVertical: 10 }}>
+              {filtered.length} ventas en total
+            </Text>
+          ) : null}
           renderItem={({ item: s }) => {
             const sc = STATUS_COLOR[s.status]
             const isExpanded = expandedId === s.id

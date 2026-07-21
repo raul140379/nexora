@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../services/api'
+import { Pagination } from '../components/ui'
 import toast from 'react-hot-toast'
 
 interface Customer {
@@ -21,6 +22,8 @@ export function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 20
 
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -35,7 +38,7 @@ export function Customers() {
   const load = (q?: string) => {
     setLoading(true)
     const params = q ? `?search=${encodeURIComponent(q)}` : ''
-    api.get(`/customers${params}`).then(r => { setCustomers(r.data); setLoading(false) })
+    api.get(`/customers${params}`).then(r => { setCustomers(r.data); setPage(1); setLoading(false) })
   }
 
   useEffect(() => { load() }, [])
@@ -160,7 +163,7 @@ export function Customers() {
               <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">
                 {search ? 'Sin resultados para esa búsqueda' : 'Sin clientes — creá uno con el botón de arriba'}
               </td></tr>
-            ) : customers.map(c => (
+            ) : customers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(c => (
               <tr key={c.id} className="hover:bg-[#1E3557] transition-colors">
                 <td className="px-4 py-3">
                   <p className="font-medium text-gray-100">{c.name}</p>
@@ -203,6 +206,7 @@ export function Customers() {
           </tbody>
         </table>
       </div>
+      <Pagination page={page} pageSize={PAGE_SIZE} total={customers.length} onChange={setPage} />
 
       {/* Modal crear / editar */}
       {showModal && (

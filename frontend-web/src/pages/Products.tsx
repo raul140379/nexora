@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../services/api'
+import { Pagination } from '../components/ui'
 import toast from 'react-hot-toast'
 
 // ── Interfaces ───────────────────────────────────────────────────────────────
@@ -145,6 +146,8 @@ export function Products() {
   const [filterCat, setFilterCat] = useState('__all__')
   const [filterSub, setFilterSub] = useState('__all__')
   const [filterPack, setFilterPack] = useState('__all__')
+  const [page, setPage] = useState(1)
+  const PAGE_SIZE = 25
   const [searchScanMode, setSearchScanMode] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -211,6 +214,9 @@ export function Products() {
       setSearchScanMode(false)
     }
   }
+
+  // reset page on filter/search change
+  const resetPage = () => setPage(1)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -427,11 +433,11 @@ export function Products() {
         <div className="space-y-2">
           <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Categoría</span>
           <div className="flex flex-wrap gap-2">
-            <Chip active={filterCat === '__all__'} onClick={() => { setFilterCat('__all__'); setFilterSub('__all__') }}>
+            <Chip active={filterCat === '__all__'} onClick={() => { setFilterCat('__all__'); setFilterSub('__all__'); resetPage() }}>
               Todas
             </Chip>
             {allCategories.map(cat => (
-              <Chip key={cat.id} active={filterCat === String(cat.id)} onClick={() => { setFilterCat(String(cat.id)); setFilterSub('__all__') }}>
+              <Chip key={cat.id} active={filterCat === String(cat.id)} onClick={() => { setFilterCat(String(cat.id)); setFilterSub('__all__'); resetPage() }}>
                 {getNameEmoji(cat.name)} {cat.name}
               </Chip>
             ))}
@@ -443,11 +449,11 @@ export function Products() {
           <div className="space-y-2">
             <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Tipo</span>
             <div className="flex flex-wrap gap-2">
-              <Chip active={filterSub === '__all__'} onClick={() => setFilterSub('__all__')}>
+              <Chip active={filterSub === '__all__'} onClick={() => { setFilterSub('__all__'); resetPage() }}>
                 Todos
               </Chip>
               {allSubcategories.map(sub => (
-                <Chip key={sub.id} active={filterSub === String(sub.id)} onClick={() => setFilterSub(String(sub.id))}>
+                <Chip key={sub.id} active={filterSub === String(sub.id)} onClick={() => { setFilterSub(String(sub.id)); resetPage() }}>
                   {getNameEmoji(sub.name)} {sub.name}
                 </Chip>
               ))}
@@ -515,7 +521,7 @@ export function Products() {
                     </div>
                   </td>
                 </tr>
-              ) : rows.map(({ product: p, price: pr }) => {
+              ) : rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map(({ product: p, price: pr }) => {
                 const stockPct = Math.min((pr.stock / maxStockVal) * 100, 100)
                 const barColor = pr.stock === 0 ? 'bg-red-500' : pr.stock <= 5 ? 'bg-orange-500' : 'bg-green-500'
                 return (
@@ -621,12 +627,15 @@ export function Products() {
 
         {/* Footer de tabla */}
         {rows.length > 0 && (
-          <div className="px-5 py-3 border-t border-white/5 flex items-center justify-between">
-            <span className="text-xs text-gray-500">{rows.length} {rows.length === 1 ? 'producto' : 'productos'} mostrados</span>
-            <button onClick={() => { setDeleteModal('all'); setDeleteConfirmText('') }}
-              className="text-xs text-gray-600 hover:text-red-400 transition-colors duration-200">
-              Eliminar todos los productos
-            </button>
+          <div className="px-5 py-3 border-t border-white/5">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-gray-500">{rows.length} {rows.length === 1 ? 'producto' : 'productos'} encontrados</span>
+              <button onClick={() => { setDeleteModal('all'); setDeleteConfirmText('') }}
+                className="text-xs text-gray-600 hover:text-red-400 transition-colors duration-200">
+                Eliminar todos los productos
+              </button>
+            </div>
+            <Pagination page={page} pageSize={PAGE_SIZE} total={rows.length} onChange={setPage} />
           </div>
         )}
       </div>
