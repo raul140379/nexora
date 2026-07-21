@@ -10,6 +10,7 @@ import { useAuthStore } from '../store/auth.store'
 export function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const { setTokens, setUser } = useAuthStore()
 
@@ -55,15 +56,20 @@ export function LoginScreen({ navigation }: any) {
           autoCapitalize="none"
           editable={!loading}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          placeholderTextColor="#555"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-        />
+        <View style={styles.pwWrap}>
+          <TextInput
+            style={styles.pwInput}
+            placeholder="Contraseña"
+            placeholderTextColor="#555"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPw}
+            editable={!loading}
+          />
+          <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPw(p => !p)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={styles.eyeText}>{showPw ? '🙈' : '👁'}</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleLogin} disabled={loading}>
           {loading
             ? <ActivityIndicator color="#0F0F0F" />
@@ -94,4 +100,8 @@ const styles = StyleSheet.create({
   btnDisabled:  { opacity: 0.6 },
   btnText:      { color: BLACK, fontSize: 16, fontWeight: '800', letterSpacing: 1 },
   powered:      { textAlign: 'center', color: '#333', fontSize: 11, marginTop: 28 },
+  pwWrap:       { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#333', borderRadius: 10, backgroundColor: BLACK, marginBottom: 12 },
+  pwInput:      { flex: 1, padding: 14, fontSize: 15, color: '#fff' },
+  eyeBtn:       { paddingHorizontal: 14 },
+  eyeText:      { fontSize: 16 },
 })
