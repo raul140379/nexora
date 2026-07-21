@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Alert
+  ActivityIndicator, RefreshControl, Alert, ScrollView
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { api } from '../services/api'
@@ -32,6 +32,37 @@ const fmtDate = (s: string) => {
   return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
+const STATUS_FILTERS = [
+  { key: '',           label: 'Todas' },
+  { key: 'pending',   label: 'Pendiente' },
+  { key: 'completed', label: 'Completada' },
+  { key: 'cancelled', label: 'Cancelada' },
+]
+
+const DATE_FILTERS = [
+  { key: '',      label: 'Siempre' },
+  { key: 'today', label: 'Hoy' },
+  { key: 'week',  label: 'Esta semana' },
+  { key: 'month', label: 'Este mes' },
+]
+
+function isInPeriod(dateStr: string, period: string): boolean {
+  const date = new Date(dateStr)
+  const now = new Date()
+  if (period === 'today') {
+    return date.toDateString() === now.toDateString()
+  }
+  if (period === 'week') {
+    const start = new Date(now); start.setDate(now.getDate() - now.getDay())
+    start.setHours(0, 0, 0, 0)
+    return date >= start
+  }
+  if (period === 'month') {
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+  }
+  return true
+}
+
 export function SalesHistoryScreen() {
   const [sales, setSales] = useState<Sale[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -39,6 +70,8 @@ export function SalesHistoryScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterDate, setFilterDate] = useState('')
 
   const load = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true); else setLoading(true)
@@ -80,15 +113,42 @@ export function SalesHistoryScreen() {
     )
   }
 
-  const totalItems = sales.reduce((s, v) => s + v.items.length, 0)
-  const totalRevenue = sales.filter(s => s.status === 'completed').reduce((s, v) => s + Number(v.total), 0)
+  const filtered = sales
+    .filter(s => !filterStatus || s.status === filterStatus)
+    .filter(s => isInPeriod(s.created_at, filterDate))
+
+  const totalItems   = filtered.reduce((s, v) => s + v.items.length, 0)
+  const totalRevenue = filtered.filter(s => s.status === 'completed').reduce((s, v) => s + Number(v.total), 0)
 
   return (
     <View style={styles.container}>
+
+      {/* Filtro por estado */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar} contentContainerStyle={styles.filterRow}>
+        {STATUS_FILTERS.map(f => (
+          <TouchableOpacity key={f.key}
+            style={[styles.chip, filterStatus === f.key && styles.chipActive]}
+            onPress={() => setFilterStatus(f.key)}>
+            <Text style={[styles.chipText, filterStatus === f.key && styles.chipTextActive]}>{f.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Filtro por fecha */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.filterBar, { paddingTop: 0 }]} contentContainerStyle={styles.filterRow}>
+        {DATE_FILTERS.map(f => (
+          <TouchableOpacity key={f.key}
+            style={[styles.chip, filterDate === f.key && styles.chipActiveDark]}
+            onPress={() => setFilterDate(f.key)}>
+            <Text style={[styles.chipText, filterDate === f.key && styles.chipTextActiveDark]}>{f.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
       {/* Resumen */}
       <View style={styles.summary}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>{sales.length}</Text>
+          <Text style={styles.summaryValue}>{filtered.length}</Text>
           <Text style={styles.summaryLabel}>Ventas</Text>
         </View>
         <View style={styles.summaryDivider} />
@@ -107,7 +167,7 @@ export function SalesHistoryScreen() {
         <ActivityIndicator size="large" color="#D4AF37" style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={sales}
+          data={filtered}
           keyExtractor={s => String(s.id)}
           ListEmptyComponent={<Text style={styles.empty}>Sin ventas registradas</Text>}
           contentContainerStyle={{ padding: 12, paddingBottom: 30 }}
@@ -207,9 +267,17 @@ const styles = StyleSheet.create({
   itemUnit:       { fontSize: 11, color: '#64748b' },
   notes:          { fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginTop: 8 },
   empty:          { textAlign: 'center', color: '#64748b', marginTop: 40 },
-  actionRow:      { flexDirection: 'row', gap: 8, marginTop: 12 },
-  completeBtn:    { flex: 1, backgroundColor: 'rgba(74,222,128,0.15)', borderWidth: 1, borderColor: 'rgba(74,222,128,0.4)', borderRadius: 8, padding: 10, alignItems: 'center' },
-  completeBtnText:{ fontSize: 13, fontWeight: '700', color: '#4ade80' },
-  cancelBtn:      { flex: 1, backgroundColor: 'rgba(248,113,113,0.15)', borderWidth: 1, borderColor: 'rgba(248,113,113,0.4)', borderRadius: 8, padding: 10, alignItems: 'center' },
-  cancelBtnText:  { fontSize: 13, fontWeight: '700', color: '#f87171' },
+  actionRow:       { flexDirection: 'row', gap: 8, marginTop: 12 },
+  completeBtn:     { flex: 1, backgroundColor: 'rgba(74,222,128,0.15)', borderWidth: 1, borderColor: 'rgba(74,222,128,0.4)', borderRadius: 8, padding: 10, alignItems: 'center' },
+  completeBtnText: { fontSize: 13, fontWeight: '700', color: '#4ade80' },
+  cancelBtn:       { flex: 1, backgroundColor: 'rgba(248,113,113,0.15)', borderWidth: 1, borderColor: 'rgba(248,113,113,0.4)', borderRadius: 8, padding: 10, alignItems: 'center' },
+  cancelBtnText:   { fontSize: 13, fontWeight: '700', color: '#f87171' },
+  filterBar:       { paddingHorizontal: 12, paddingTop: 10 },
+  filterRow:       { flexDirection: 'row', gap: 8, paddingBottom: 4 },
+  chip:            { borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, backgroundColor: '#172A46' },
+  chipActive:      { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
+  chipActiveDark:  { backgroundColor: '#243D66', borderColor: '#D4AF37' },
+  chipText:            { fontSize: 12, fontWeight: '600', color: '#94a3b8' },
+  chipTextActive:      { color: '#0F0F0F' },
+  chipTextActiveDark:  { color: '#D4AF37' },
 })
