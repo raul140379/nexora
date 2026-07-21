@@ -15,6 +15,7 @@ const MENU_COLORS: Record<string, string> = {
   'Usuarios':         '#7c3aed',
   'Permisos':         '#9f1239',
   'Mi contraseña':    '#0f4c75',
+  'Reportes':         '#064e3b',
 }
 
 export function HomeScreen({ navigation }: any) {
@@ -53,6 +54,7 @@ export function HomeScreen({ navigation }: any) {
     { label: 'Usuarios',      screen: 'Users',        show: role === 'admin' },
     { label: 'Permisos',      screen: 'Permissions',  show: role === 'admin' },
     { label: 'Mi contraseña', screen: 'ChangePassword', show: true },
+    { label: 'Reportes',      screen: 'Reports',        show: has('view_customers') || role === 'admin' || role === 'ejecutivo' },
   ]
 
   return (
