@@ -7,13 +7,14 @@ import { api } from '../services/api'
 interface Stats { products: number; customers: number; sales: number }
 
 const MENU_COLORS: Record<string, string> = {
-  'Nueva venta':     '#1d4ed8',
-  'Historial':       '#6d28d9',
-  'Productos':       '#0e7490',
-  'Clientes':        '#065f46',
-  'Categorías':      '#92400e',
-  'Usuarios':        '#7c3aed',
-  'Permisos':        '#9f1239',
+  'Nueva venta':      '#1d4ed8',
+  'Historial':        '#6d28d9',
+  'Productos':        '#0e7490',
+  'Clientes':         '#065f46',
+  'Categorías':       '#92400e',
+  'Usuarios':         '#7c3aed',
+  'Permisos':         '#9f1239',
+  'Mi contraseña':    '#0f4c75',
 }
 
 export function HomeScreen({ navigation }: any) {
@@ -51,6 +52,7 @@ export function HomeScreen({ navigation }: any) {
     { label: 'Categorías',    screen: 'Categories',   show: has('manage_categories') },
     { label: 'Usuarios',      screen: 'Users',        show: role === 'admin' },
     { label: 'Permisos',      screen: 'Permissions',  show: role === 'admin' },
+    { label: 'Mi contraseña', screen: 'ChangePassword', show: true },
   ]
 
   return (
