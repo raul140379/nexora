@@ -10,6 +10,7 @@ import { useAuthStore } from './src/store/auth.store'
 import { usePermissionsStore } from './src/store/permissions.store'
 import { authApi } from './src/services/auth.api'
 import { LoginScreen } from './src/screens/LoginScreen'
+import { RegisterScreen } from './src/screens/RegisterScreen'
 import { HomeScreen } from './src/screens/HomeScreen'
 import { ProductsScreen } from './src/screens/ProductsScreen'
 import { SalesScreen } from './src/screens/SalesScreen'
@@ -71,7 +72,10 @@ export default function App() {
             }}
           >
             {!isAuthenticated ? (
-              <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+              <>
+                <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
+              </>
             ) : (
               <>
                 <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />

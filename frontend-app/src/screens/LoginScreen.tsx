@@ -77,6 +77,10 @@ export function LoginScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity onPress={() => navigation.navigate('Register')} style={{ marginTop: 16 }}>
+        <Text style={styles.registerLink}>¿Primera vez? Crear cuenta</Text>
+      </TouchableOpacity>
+
       <Text style={styles.powered}>Powered by Nexora</Text>
     </KeyboardAvoidingView>
   )
@@ -100,8 +104,9 @@ const styles = StyleSheet.create({
   btnDisabled:  { opacity: 0.6 },
   btnText:      { color: BLACK, fontSize: 16, fontWeight: '800', letterSpacing: 1 },
   powered:      { textAlign: 'center', color: '#333', fontSize: 11, marginTop: 28 },
-  pwWrap:       { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#333', borderRadius: 10, backgroundColor: BLACK, marginBottom: 12 },
-  pwInput:      { flex: 1, padding: 14, fontSize: 15, color: '#fff' },
-  eyeBtn:       { paddingHorizontal: 14 },
-  eyeText:      { fontSize: 16 },
+  pwWrap:        { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#333', borderRadius: 10, backgroundColor: BLACK, marginBottom: 12 },
+  pwInput:       { flex: 1, padding: 14, fontSize: 15, color: '#fff' },
+  eyeBtn:        { paddingHorizontal: 14 },
+  eyeText:       { fontSize: 16 },
+  registerLink:  { textAlign: 'center', color: '#B8860B', fontSize: 13, textDecorationLine: 'underline' },
 })

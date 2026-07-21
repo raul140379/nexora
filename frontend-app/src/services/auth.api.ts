@@ -2,11 +2,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { api } from './api'
 
 interface LoginRequest { email: string; password: string }
+interface RegisterRequest { full_name: string; username: string; email: string; password: string }
 interface TokenResponse { access_token: string; refresh_token: string; token_type: string }
 
 class AuthAPI {
   async login(credentials: LoginRequest): Promise<TokenResponse> {
     const res = await api.post('/auth/login', credentials)
+    return res.data
+  }
+
+  async register(data: RegisterRequest): Promise<TokenResponse> {
+    const res = await api.post('/auth/register', data)
     return res.data
   }
 
