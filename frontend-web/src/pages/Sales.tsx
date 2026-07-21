@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../services/api'
+import { useAuthStore } from '../store/auth.store'
+import { usePermissionsStore } from '../store/permissions.store'
 import toast from 'react-hot-toast'
 
 interface PackPrice { id: number; pack_name: string; units_per_pack: number; price_a: number; price_b: number | null; price_c: number | null; stock: number }
@@ -7,15 +9,24 @@ interface Product { id: number; name: string; sku: string | null; price: number;
 interface Customer { id: number; name: string }
 interface SaleItem { product_id: number; pack_price_id: number; product_name: string; pack_name: string; price_label: string; quantity: number; unit_price: number; price_tier_name: string; subtotal: number }
 interface Sale {
-  id: number; total: number; discount_pct: number; status: string; customer_id: number | null
+  id: number; user_id: number; total: number; discount_pct: number; status: string; customer_id: number | null
   items: { id: number; quantity: number; unit_price: number; price_tier_name: string; subtotal: number }[]
   created_at: string
 }
 
 const statusLabel: Record<string, string> = { completed: 'Completada', pending: 'Pendiente', cancelled: 'Cancelada' }
-const statusColor: Record<string, string> = { completed: 'bg-green-100 text-green-700', pending: 'bg-yellow-100 text-yellow-700', cancelled: 'bg-red-100 text-red-700' }
+const statusColor: Record<string, string> = {
+  completed: 'bg-green-900/30 text-green-400 border border-green-800/30',
+  pending:   'bg-yellow-900/30 text-yellow-400 border border-yellow-800/30',
+  cancelled: 'bg-red-900/30 text-red-400 border border-red-800/30',
+}
 
 export function Sales() {
+  const { user } = useAuthStore()
+  const { has } = usePermissionsStore()
+  const canViewAll     = has('view_all_sales')
+  const canViewRevenue = has('view_revenue')
+
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -27,6 +38,7 @@ export function Sales() {
   const [discount, setDiscount] = useState('0')
   const [saving, setSaving] = useState(false)
   const [expanded, setExpanded] = useState<number | null>(null)
+  const [updatingId, setUpdatingId] = useState<number | null>(null)
 
   // selección de ítem
   const [selProductId, setSelProductId] = useState('')
@@ -54,7 +66,6 @@ export function Sales() {
   const selectedProduct = products.find(p => p.id === parseInt(selProductId))
   const selectedPack = selectedProduct?.prices.find(pr => pr.id === parseInt(selPackId))
 
-  // Al cambiar producto, preseleccionar primer empaque
   useEffect(() => {
     if (selectedProduct?.prices.length) setSelPackId(String(selectedProduct.prices[0].id))
     else setSelPackId('')
@@ -129,60 +140,134 @@ export function Sales() {
     } finally { setSaving(false) }
   }
 
+  const changeStatus = async (sale: Sale, newStatus: 'completed' | 'cancelled') => {
+    const label = newStatus === 'completed' ? 'completar' : 'cancelar'
+    const verb  = newStatus === 'completed' ? 'Completar'  : 'Cancelar'
+    if (!confirm(`¿${verb} la Venta #${sale.id}?`)) return
+    setUpdatingId(sale.id)
+    try {
+      await api.patch(`/sales/${sale.id}`, { status: newStatus })
+      setSales(prev => prev.map(s => s.id === sale.id ? { ...s, status: newStatus } : s))
+      toast.success(`Venta #${sale.id} ${label === 'completar' ? 'completada' : 'cancelada'}`)
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'No se pudo actualizar')
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
+  // Filtro por permiso de vista
+  const filtered = sales.filter(s => canViewAll || s.user_id === user?.id)
+
+  const colCount = 5 + (canViewRevenue ? 3 : 0)
+
   if (loading) return <div className="p-8 text-[#6B7280]">Cargando...</div>
 
   return (
     <div className="p-4 md:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-100">Ventas</h2>
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-100">Ventas</h2>
+          {!canViewAll && (
+            <p className="text-xs text-gray-500 mt-0.5">Mostrando solo tus ventas</p>
+          )}
+        </div>
         <button onClick={openModal} className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg">
           + Nueva venta
         </button>
       </div>
 
-      <div className="bg-[#243D66] rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 rounded-none md:rounded-xl">
-        <table className="w-full text-sm min-w-[600px]">
-          <thead className="bg-[#172A46] border-b border-[#1E3557] [&_th]:text-white">
+      <div className="bg-[#243D66] rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 md:rounded-xl">
+        <table className="w-full text-sm min-w-[520px]">
+          <thead className="bg-[#172A46] border-b border-[#1E3557]">
             <tr>
-              {['#', 'Fecha', 'Cliente', 'Items', 'Subtotal', 'Desc.', 'Total', 'Estado'].map(h => (
-                <th key={h} className="px-4 py-3 text-left font-medium text-white">{h}</th>
-              ))}
+              <th className="px-4 py-3 text-left font-medium text-white">#</th>
+              <th className="px-4 py-3 text-left font-medium text-white">Fecha</th>
+              <th className="px-4 py-3 text-left font-medium text-white">Cliente</th>
+              <th className="px-4 py-3 text-left font-medium text-white">Ítems</th>
+              {canViewRevenue && <>
+                <th className="px-4 py-3 text-left font-medium text-white">Subtotal</th>
+                <th className="px-4 py-3 text-left font-medium text-white">Desc.</th>
+                <th className="px-4 py-3 text-left font-medium text-white">Total</th>
+              </>}
+              <th className="px-4 py-3 text-left font-medium text-white">Estado</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {sales.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#6B7280]">Sin ventas registradas</td></tr>
-            ) : sales.map(s => {
+            {filtered.length === 0 ? (
+              <tr><td colSpan={colCount} className="px-4 py-8 text-center text-[#6B7280]">Sin ventas registradas</td></tr>
+            ) : filtered.map(s => {
               const sub = s.items.reduce((acc, it) => acc + it.unit_price * it.quantity, 0)
-              return <>
-                <tr key={s.id} className="hover:bg-[#1E3557] cursor-pointer" onClick={() => setExpanded(expanded === s.id ? null : s.id)}>
-                  <td className="px-4 py-3 text-[#6B7280] font-mono text-xs">#{s.id}</td>
-                  <td className="px-4 py-3 text-[#6B7280]">{new Date(s.created_at).toLocaleDateString('es-AR')}</td>
-                  <td className="px-4 py-3 text-[#6B7280]">{s.customer_id ? `#${s.customer_id}` : 'Consumidor'}</td>
-                  <td className="px-4 py-3 text-[#6B7280]">{s.items.length}</td>
-                  <td className="px-4 py-3 text-[#6B7280]">${sub.toFixed(2)}</td>
-                  <td className="px-4 py-3">{Number(s.discount_pct) > 0 ? <span className="bg-orange-100 text-orange-700 text-xs font-medium px-2 py-0.5 rounded-full">{Number(s.discount_pct)}%</span> : <span className="text-[#6B7280] text-xs">—</span>}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-100">${Number(s.total).toFixed(2)}</td>
-                  <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[s.status] || 'bg-gray-100'}`}>{statusLabel[s.status] || s.status}</span></td>
-                </tr>
-                {expanded === s.id && (
-                  <tr key={`${s.id}-d`} className="bg-[#172A46]">
-                    <td colSpan={8} className="px-6 py-3">
-                      <div className="flex flex-wrap gap-2">
-                        {s.items.map(it => (
-                          <div key={it.id} className="bg-[#243D66] border border-white/10 rounded-lg px-3 py-1.5 text-xs">
-                            <span className="font-medium text-gray-300">{it.price_tier_name}</span>
-                            <span className="text-[#6B7280] mx-1">·</span>
-                            <span>{it.quantity} × ${Number(it.unit_price).toFixed(2)}</span>
-                            <span className="text-[#6B7280] mx-1">=</span>
-                            <span className="font-bold text-blue-600">${Number(it.subtotal).toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
+              const isExpanded = expanded === s.id
+              return (
+                <>
+                  <tr key={s.id} className="hover:bg-[#1E3557] cursor-pointer" onClick={() => setExpanded(isExpanded ? null : s.id)}>
+                    <td className="px-4 py-3 text-[#6B7280] font-mono text-xs">#{s.id}</td>
+                    <td className="px-4 py-3 text-[#6B7280]">{new Date(s.created_at).toLocaleDateString('es-AR')}</td>
+                    <td className="px-4 py-3 text-[#6B7280]">{s.customer_id ? `#${s.customer_id}` : 'Consumidor'}</td>
+                    <td className="px-4 py-3 text-[#6B7280]">{s.items.length}</td>
+                    {canViewRevenue && <>
+                      <td className="px-4 py-3 text-[#6B7280]">${sub.toFixed(2)}</td>
+                      <td className="px-4 py-3">
+                        {Number(s.discount_pct) > 0
+                          ? <span className="bg-orange-900/30 text-orange-400 border border-orange-800/30 text-xs font-medium px-2 py-0.5 rounded-full">{Number(s.discount_pct)}%</span>
+                          : <span className="text-[#6B7280] text-xs">—</span>}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-gray-100">${Number(s.total).toFixed(2)}</td>
+                    </>}
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[s.status] || 'bg-gray-100'}`}>
+                        {statusLabel[s.status] || s.status}
+                      </span>
                     </td>
                   </tr>
-                )}
-              </>
+
+                  {isExpanded && (
+                    <tr key={`${s.id}-d`} className="bg-[#172A46]">
+                      <td colSpan={colCount} className="px-6 py-4">
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {s.items.map(it => (
+                            <div key={it.id} className="bg-[#243D66] border border-white/10 rounded-lg px-3 py-1.5 text-xs">
+                              <span className="font-medium text-gray-300">{it.price_tier_name}</span>
+                              <span className="text-[#6B7280] mx-1">·</span>
+                              <span className="text-gray-400">{it.quantity} un.</span>
+                              {canViewRevenue && <>
+                                <span className="text-[#6B7280] mx-1">×</span>
+                                <span>${Number(it.unit_price).toFixed(2)}</span>
+                                <span className="text-[#6B7280] mx-1">=</span>
+                                <span className="font-bold text-[#D4AF37]">${Number(it.subtotal).toFixed(2)}</span>
+                              </>}
+                            </div>
+                          ))}
+                        </div>
+
+                        {s.status === 'pending' && (
+                          <div className="flex gap-2 mt-1">
+                            {updatingId === s.id ? (
+                              <span className="text-xs text-gray-400 italic">Actualizando...</span>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={e => { e.stopPropagation(); changeStatus(s, 'completed') }}
+                                  className="text-xs bg-green-900/30 hover:bg-green-900/50 text-green-400 border border-green-800/40 font-semibold px-4 py-1.5 rounded-lg transition-colors"
+                                >
+                                  ✓ Completar
+                                </button>
+                                <button
+                                  onClick={e => { e.stopPropagation(); changeStatus(s, 'cancelled') }}
+                                  className="text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 border border-red-800/40 font-semibold px-4 py-1.5 rounded-lg transition-colors"
+                                >
+                                  ✕ Cancelar
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </>
+              )
             })}
           </tbody>
         </table>
@@ -192,9 +277,9 @@ export function Sales() {
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50">
           <div className="bg-[#243D66] rounded-t-2xl sm:rounded-xl shadow-xl w-full max-w-2xl sm:mx-4 max-h-[95vh] sm:max-h-[92vh] overflow-y-auto">
-            <div className="sticky top-0 bg-[#243D66] border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-xl">
+            <div className="sticky top-0 bg-[#243D66] border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-xl">
               <h3 className="text-lg font-semibold text-gray-100">Nueva venta</h3>
-              <button onClick={() => setShowModal(false)} className="text-[#6B7280] hover:text-[#6B7280] text-xl">&times;</button>
+              <button onClick={() => setShowModal(false)} className="text-[#6B7280] hover:text-gray-200 text-xl">&times;</button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -213,22 +298,20 @@ export function Sales() {
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-gray-300">Agregar producto</p>
                   <button type="button" onClick={activateScan}
-                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${scanMode ? 'bg-green-100 text-green-700 animate-pulse' : 'bg-gray-200 text-[#6B7280] hover:bg-blue-100 hover:text-blue-600'}`}>
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${scanMode ? 'bg-green-900/30 text-green-400 animate-pulse' : 'bg-[#243D66] text-[#6B7280] hover:text-gray-200'}`}>
                     {scanMode ? '● Escaneando...' : '⊡ Escanear código'}
                   </button>
                 </div>
 
-                {/* Campo escáner */}
                 {scanMode && (
                   <div className="relative">
                     <input ref={scanRef} value={scanCode} onChange={e => setScanCode(e.target.value)} onKeyDown={handleScanKey}
-                      className="w-full border-2 border-green-400 rounded-lg px-3 py-2 text-sm font-mono bg-green-50 focus:outline-none"
+                      className="w-full border-2 border-green-500/60 rounded-lg px-3 py-2 text-sm font-mono bg-green-900/10 text-green-300 focus:outline-none"
                       placeholder="Apuntá el lector de barras/QR y presioná Enter..." />
-                    <p className="text-xs text-green-600 mt-1">El lector físico USB/Bluetooth tipea el código y presiona Enter automáticamente.</p>
+                    <p className="text-xs text-green-500 mt-1">El lector físico USB/Bluetooth tipea el código y presiona Enter automáticamente.</p>
                   </div>
                 )}
 
-                {/* Selector de producto */}
                 <div>
                   <label className="text-xs text-[#6B7280] mb-1 block">Producto</label>
                   <select value={selProductId} onChange={e => setSelProductId(e.target.value)}
@@ -240,13 +323,10 @@ export function Sales() {
 
                 {selectedProduct && (
                   <>
-                    {/* Aviso de stock al seleccionar empaque */}
                     {selectedPack && (
-                      <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${selectedPack.stock === 0 ? 'bg-red-50 border border-red-200' : selectedPack.stock <= 5 ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'}`}>
-                        <span className={`text-lg ${selectedPack.stock === 0 ? 'text-red-500' : selectedPack.stock <= 5 ? 'text-orange-500' : 'text-green-600'}`}>
-                          {selectedPack.stock === 0 ? '⛔' : selectedPack.stock <= 5 ? '⚠️' : '✓'}
-                        </span>
-                        <span className={`font-medium ${selectedPack.stock === 0 ? 'text-red-700' : selectedPack.stock <= 5 ? 'text-orange-700' : 'text-green-700'}`}>
+                      <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${selectedPack.stock === 0 ? 'bg-red-900/20 border border-red-800/30' : selectedPack.stock <= 5 ? 'bg-orange-900/20 border border-orange-800/30' : 'bg-green-900/20 border border-green-800/30'}`}>
+                        <span className="text-lg">{selectedPack.stock === 0 ? '⛔' : selectedPack.stock <= 5 ? '⚠️' : '✓'}</span>
+                        <span className={`font-medium text-sm ${selectedPack.stock === 0 ? 'text-red-400' : selectedPack.stock <= 5 ? 'text-orange-400' : 'text-green-400'}`}>
                           {selectedPack.stock === 0
                             ? `Sin stock disponible para "${selectedPack.pack_name}"`
                             : selectedPack.stock <= 5
@@ -256,7 +336,6 @@ export function Sales() {
                       </div>
                     )}
 
-                    {/* Empaque + Precio A/B/C + Cantidad en una fila */}
                     <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
                       <div>
                         <label className="text-xs text-[#6B7280] mb-1 block">Empaque</label>
@@ -296,11 +375,10 @@ export function Sales() {
                       </button>
                     </div>
 
-                    {/* Preview del precio seleccionado */}
                     {selectedPack && currentPrice != null && (
                       <div className="text-xs text-[#6B7280] bg-[#243D66] rounded-lg px-3 py-2 border border-white/10">
                         <span className="font-medium text-gray-300">{selectedProduct.name}</span>
-                        {' '} · {selectedPack.pack_name} · <span className={`font-bold ${selTier === 'a' ? 'text-blue-600' : selTier === 'b' ? 'text-green-600' : 'text-orange-500'}`}>{tierLabel(selTier)}: ${Number(currentPrice).toFixed(2)}</span>
+                        {' '} · {selectedPack.pack_name} · <span className={`font-bold ${selTier === 'a' ? 'text-blue-400' : selTier === 'b' ? 'text-green-400' : 'text-orange-400'}`}>{tierLabel(selTier)}: ${Number(currentPrice).toFixed(2)}</span>
                         {' '} × {selQty} = <span className="font-bold text-gray-100">${(Number(currentPrice) * (parseInt(selQty) || 1)).toFixed(2)}</span>
                       </div>
                     )}
@@ -312,7 +390,7 @@ export function Sales() {
               {items.length > 0 && (
                 <div className="border border-white/10 rounded-xl overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-[#172A46] [&_th]:text-white">
+                    <thead className="bg-[#172A46]">
                       <tr>
                         {['Producto', 'Empaque', 'Precio', 'Cant.', 'P. Unit.', 'Subtotal', ''].map(h => (
                           <th key={h} className="px-3 py-2 text-left text-xs font-medium text-white">{h}</th>
@@ -324,11 +402,11 @@ export function Sales() {
                         <tr key={i} className="hover:bg-[#1E3557]">
                           <td className="px-3 py-2 font-medium text-gray-100">{it.product_name}</td>
                           <td className="px-3 py-2 text-[#6B7280] text-xs">{it.pack_name}</td>
-                          <td className="px-3 py-2"><span className={`text-xs font-bold px-1.5 py-0.5 rounded ${it.price_label === 'Precio A' ? 'bg-blue-100 text-blue-700' : it.price_label === 'Precio B' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-600'}`}>{it.price_label}</span></td>
-                          <td className="px-3 py-2 text-center">{it.quantity}</td>
-                          <td className="px-3 py-2">${Number(it.unit_price).toFixed(2)}</td>
+                          <td className="px-3 py-2"><span className={`text-xs font-bold px-1.5 py-0.5 rounded ${it.price_label === 'Precio A' ? 'bg-blue-900/40 text-blue-300' : it.price_label === 'Precio B' ? 'bg-green-900/40 text-green-300' : 'bg-orange-900/40 text-orange-300'}`}>{it.price_label}</span></td>
+                          <td className="px-3 py-2 text-center text-gray-300">{it.quantity}</td>
+                          <td className="px-3 py-2 text-gray-300">${Number(it.unit_price).toFixed(2)}</td>
                           <td className="px-3 py-2 font-semibold text-gray-100">${it.subtotal.toFixed(2)}</td>
-                          <td className="px-3 py-2"><button type="button" onClick={() => removeItem(i)} className="text-red-400 hover:text-red-600">&times;</button></td>
+                          <td className="px-3 py-2"><button type="button" onClick={() => removeItem(i)} className="text-red-400 hover:text-red-300">&times;</button></td>
                         </tr>
                       ))}
                     </tbody>
@@ -346,7 +424,7 @@ export function Sales() {
                       className="w-full border border-white/10 rounded-lg px-3 py-2 text-sm pr-7 focus:outline-none focus:ring-2 focus:ring-orange-400" />
                     <span className="absolute right-2.5 top-2 text-[#6B7280] text-sm">%</span>
                   </div>
-                  {parseFloat(discount) > 0 && <span className="text-sm text-orange-600 font-medium">− ${discountAmt.toFixed(2)}</span>}
+                  {parseFloat(discount) > 0 && <span className="text-sm text-orange-400 font-medium">− ${discountAmt.toFixed(2)}</span>}
                 </div>
                 <div className="flex justify-between text-sm text-[#6B7280] border-t border-white/10 pt-2">
                   <span>Subtotal</span><span>${subtotalItems.toFixed(2)}</span>
@@ -365,7 +443,7 @@ export function Sales() {
                   placeholder="Observaciones opcionales..." />
               </div>
 
-              <div className="flex gap-3 border-t border-gray-100 pt-4">
+              <div className="flex gap-3 border-t border-white/10 pt-4">
                 <button type="button" onClick={() => setShowModal(false)}
                   className="flex-1 border border-white/10 text-gray-300 text-sm font-medium py-2.5 rounded-lg hover:bg-[#1E3557]">
                   Cancelar
