@@ -52,13 +52,12 @@ export function CategoriesScreen() {
       setShowCatModal(false)
       Alert.alert('✓ Guardado', editingCatId ? 'Categoría actualizada correctamente' : 'Categoría creada correctamente')
     } catch (err: any) {
-      const detail = err.response?.data?.detail
-      if (detail) {
-        Alert.alert('Error', detail)
-      } else {
-        // Error de red/parseo pero el dato fue guardado — cerrar modal silenciosamente
-        setShowCatModal(false)
-      }
+      const status = err.response?.status
+      const rawDetail = err.response?.data?.detail
+      const detail = typeof rawDetail === 'string' ? rawDetail
+        : rawDetail ? JSON.stringify(rawDetail)
+        : err.message || 'No se pudo conectar al servidor'
+      Alert.alert(`Error${status ? ` ${status}` : ''}`, detail)
     } finally {
       setSavingCat(false)
       load()
@@ -87,12 +86,12 @@ export function CategoriesScreen() {
       setShowSubModal(false)
       Alert.alert('✓ Guardado', editingSubId ? 'Subcategoría actualizada correctamente' : 'Subcategoría creada correctamente')
     } catch (err: any) {
-      const detail = err.response?.data?.detail
-      if (detail) {
-        Alert.alert('Error', detail)
-      } else {
-        setShowSubModal(false)
-      }
+      const status = err.response?.status
+      const rawDetail = err.response?.data?.detail
+      const detail = typeof rawDetail === 'string' ? rawDetail
+        : rawDetail ? JSON.stringify(rawDetail)
+        : err.message || 'No se pudo conectar al servidor'
+      Alert.alert(`Error${status ? ` ${status}` : ''}`, detail)
     } finally {
       setSavingSub(false)
       load()

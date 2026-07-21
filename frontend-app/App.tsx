@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as Updates from 'expo-updates'
 import { useAuthStore } from './src/store/auth.store'
 import { usePermissionsStore } from './src/store/permissions.store'
 import { authApi } from './src/services/auth.api'
@@ -31,6 +32,17 @@ export default function App() {
 
   useEffect(() => {
     const init = async () => {
+      // Aplicar OTA update disponible de inmediato (solo en producción)
+      if (!__DEV__) {
+        try {
+          const { isAvailable } = await Updates.checkForUpdateAsync()
+          if (isAvailable) {
+            await Updates.fetchUpdateAsync()
+            await Updates.reloadAsync()
+            return  // reloadAsync reinicia la app — nada más corre aquí
+          }
+        } catch {}
+      }
       try {
         const token = await AsyncStorage.getItem('access_token')
         if (token) {

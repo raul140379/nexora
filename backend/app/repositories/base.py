@@ -31,7 +31,11 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         for field, value in data.model_dump(exclude_unset=True).items():
             setattr(obj, field, value)
         db.commit()
-        db.refresh(obj)
+        try:
+            db.refresh(obj)
+        except Exception:
+            db.rollback()
+            obj = self.get(db, id)
         return obj
 
     def delete(self, db: Session, id: int) -> bool:
