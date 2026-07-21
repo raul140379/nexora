@@ -1,4 +1,5 @@
 import { useAuthStore, type UserRole } from '../../store/auth.store'
+import { usePermissionsStore } from '../../store/permissions.store'
 
 interface KpiCardProps {
   label: string
@@ -9,14 +10,16 @@ interface KpiCardProps {
   desc?: string
   trend?: { value: string; positive: boolean }
   onClick?: () => void
-  /** Si se especifica, la card solo se muestra para esos roles */
   roles?: UserRole[]
+  perm?: string
 }
 
-export const KpiCard = ({ label, value, icon, iconBg, iconColor, desc, trend, onClick, roles }: KpiCardProps) => {
+export const KpiCard = ({ label, value, icon, iconBg, iconColor, desc, trend, onClick, roles, perm }: KpiCardProps) => {
   const userRole = useAuthStore(s => s.user?.role)
+  const { has } = usePermissionsStore()
 
   if (roles && userRole && !roles.includes(userRole)) return null
+  if (perm && !has(perm)) return null
 
   const Tag = onClick ? 'button' : 'div'
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { authApi } from '../services/auth.api'
 import { useAuthStore } from '../store/auth.store'
 import { usePermissionsStore } from '../store/permissions.store'
@@ -110,12 +110,6 @@ export function Login() {
           <p className="mt-5 text-center text-xs text-[#444]">
             ¿Olvidaste tu contraseña?{' '}
             <span className="text-[#666]">Contactá a tu administrador.</span>
-          </p>
-          <p className="mt-3 text-center text-xs text-[#444]">
-            ¿No tenés cuenta?{' '}
-            <Link to="/register" className="text-[#D4AF37] hover:text-[#B8860B] font-medium transition-colors">
-              Registrate
-            </Link>
           </p>
         </div>
 

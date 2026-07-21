@@ -77,10 +77,6 @@ export function LoginScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Register')} style={{ marginTop: 16 }}>
-        <Text style={styles.registerLink}>¿Primera vez? Crear cuenta</Text>
-      </TouchableOpacity>
-
       <Text style={styles.powered}>Powered by Nexora</Text>
     </KeyboardAvoidingView>
   )

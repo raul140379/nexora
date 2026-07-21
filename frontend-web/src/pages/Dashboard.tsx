@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 import { useAuthStore } from '../store/auth.store'
+import { usePermissionsStore } from '../store/permissions.store'
 import { KpiCard, PageHeader, IcoBox, IcoCart, IcoDollar, IcoUsers } from '../components/ui'
 
 interface Stats { products: number; customers: number; sales: number; revenue: number }
@@ -12,6 +13,7 @@ export function Dashboard() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
 
+  const { has } = usePermissionsStore()
   const firstName = user?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'
 
   useEffect(() => {
@@ -76,7 +78,6 @@ export function Dashboard() {
             onClick={() => navigate('/sales')}
           />
 
-          {/* Solo admin y ejecutivo ven montos */}
           <KpiCard
             label="Recaudado"
             value={`$${stats.revenue.toFixed(2)}`}
@@ -84,10 +85,9 @@ export function Dashboard() {
             iconBg="bg-blue-900/30"
             iconColor="text-blue-400"
             desc="Ventas completadas"
-            roles={['admin', 'ejecutivo']}
+            perm="view_revenue"
           />
 
-          {/* Solo admin y ejecutivo ven clientes */}
           <KpiCard
             label="Clientes"
             value={stats.customers}
@@ -96,7 +96,7 @@ export function Dashboard() {
             iconColor="text-violet-400"
             desc="Total registrados"
             onClick={() => navigate('/customers')}
-            roles={['admin', 'ejecutivo']}
+            perm="view_customers"
           />
 
         </div>
@@ -117,21 +117,19 @@ export function Dashboard() {
             className="bg-[#172A46] hover:bg-[#1E3557] text-gray-300 border border-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             Ver productos
           </button>
-          {/* Solo admin y ejecutivo */}
-          {(user?.role === 'admin' || user?.role === 'ejecutivo') && (
-            <>
-              <button onClick={() => navigate('/customers')}
-                className="bg-[#172A46] hover:bg-[#1E3557] text-gray-300 border border-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                Ver clientes
-              </button>
-              <button onClick={() => navigate('/categories')}
-                className="bg-[#172A46] hover:bg-[#1E3557] text-gray-300 border border-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                Ver categorías
-              </button>
-            </>
+          {has('view_customers') && (
+            <button onClick={() => navigate('/customers')}
+              className="bg-[#172A46] hover:bg-[#1E3557] text-gray-300 border border-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Ver clientes
+            </button>
           )}
-          {/* Solo admin */}
-          {user?.role === 'admin' && (
+          {has('manage_categories') && (
+            <button onClick={() => navigate('/categories')}
+              className="bg-[#172A46] hover:bg-[#1E3557] text-gray-300 border border-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Ver categorías
+            </button>
+          )}
+          {has('manage_users') && (
             <button onClick={() => navigate('/users')}
               className="bg-[#172A46] hover:bg-[#1E3557] text-gray-300 border border-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               Gestionar usuarios

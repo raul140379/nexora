@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.v1.deps import get_current_user, get_db
+from app.api.v1.deps import get_current_user, get_current_admin, get_db
 from app.core.security import verify_token, get_password_hash
 from app.models.user import User
 from app.repositories.user_repo import user_repo
@@ -24,7 +24,8 @@ async def setup_admin(data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
-async def register(data: UserCreate, db: Session = Depends(get_db)):
+async def register(data: UserCreate, db: Session = Depends(get_db), _: User = Depends(get_current_admin)):
+    """Registro deshabilitado para usuarios externos. Solo admins pueden crear cuentas vía /users."""
     user = user_service.register(db, data)
     access_token, refresh_token = user_service.create_tokens(user.id, user.email)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)

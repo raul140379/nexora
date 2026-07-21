@@ -5,7 +5,6 @@ import { usePermissionsStore } from './store/permissions.store'
 import { useEffect, useState } from 'react'
 import { authApi } from './services/auth.api'
 import { Login } from './pages/Login'
-import { Register } from './pages/Register'
 import { Dashboard } from './pages/Dashboard'
 import { Products } from './pages/Products'
 import { Categories } from './pages/Categories'
@@ -26,6 +25,14 @@ function RoleRoute({ children, roles }: { children: React.ReactNode; roles: User
   const user = useAuthStore((s) => s.user)
   if (!user) return <Navigate to="/login" replace />
   if (!roles.includes(user.role as UserRole)) return <Navigate to="/" replace />
+  return <>{children}</>
+}
+
+function PermRoute({ children, perm }: { children: React.ReactNode; perm: string }) {
+  const user = useAuthStore((s) => s.user)
+  const { has } = usePermissionsStore()
+  if (!user) return <Navigate to="/login" replace />
+  if (!has(perm)) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -62,14 +69,14 @@ export default function App() {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="users"         element={<RoleRoute roles={['admin']}><Users /></RoleRoute>} />
           <Route path="permissions"   element={<RoleRoute roles={['admin']}><Permissions /></RoleRoute>} />
-          <Route path="categories"    element={<RoleRoute roles={['admin','ejecutivo']}><Categories /></RoleRoute>} />
+          <Route path="categories"    element={<PermRoute perm="manage_categories"><Categories /></PermRoute>} />
           <Route path="products"      element={<Products />} />
-          <Route path="customers"     element={<RoleRoute roles={['admin','ejecutivo']}><Customers /></RoleRoute>} />
+          <Route path="customers"     element={<PermRoute perm="view_customers"><Customers /></PermRoute>} />
           <Route path="sales"         element={<Sales />} />
           <Route path="reports"       element={<Reports />} />
           <Route path="design-system" element={<RoleRoute roles={['admin']}><DesignSystem /></RoleRoute>} />
