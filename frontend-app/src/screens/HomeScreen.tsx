@@ -13,6 +13,7 @@ const MENU_COLORS: Record<string, string> = {
   'Clientes':        '#065f46',
   'Categorías':      '#92400e',
   'Usuarios':        '#7c3aed',
+  'Permisos':        '#9f1239',
 }
 
 export function HomeScreen({ navigation }: any) {
@@ -49,6 +50,7 @@ export function HomeScreen({ navigation }: any) {
     { label: 'Clientes',      screen: 'Customers',    show: has('view_customers') },
     { label: 'Categorías',    screen: 'Categories',   show: has('manage_categories') },
     { label: 'Usuarios',      screen: 'Users',        show: role === 'admin' },
+    { label: 'Permisos',      screen: 'Permissions',  show: role === 'admin' },
   ]
 
   return (

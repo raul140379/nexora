@@ -18,6 +18,7 @@ import { CustomersScreen } from './src/screens/CustomersScreen'
 import { UsersScreen } from './src/screens/UsersScreen'
 import { CategoriesScreen } from './src/screens/CategoriesScreen'
 import { SalesHistoryScreen } from './src/screens/SalesHistoryScreen'
+import { PermissionsScreen } from './src/screens/PermissionsScreen'
 
 const Stack = createNativeStackNavigator()
 
@@ -85,6 +86,7 @@ export default function App() {
                 <Stack.Screen name="Users" component={UsersScreen} options={{ title: 'Usuarios' }} />
                 <Stack.Screen name="Categories" component={CategoriesScreen} options={{ title: 'Categorías' }} />
                 <Stack.Screen name="SalesHistory" component={SalesHistoryScreen} options={{ title: 'Historial de ventas' }} />
+                <Stack.Screen name="Permissions" component={PermissionsScreen} options={{ title: 'Permisos y Roles' }} />
               </>
             )}
           </Stack.Navigator>
