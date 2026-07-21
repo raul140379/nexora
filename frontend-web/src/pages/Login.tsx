@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { authApi } from '../services/auth.api'
 import { useAuthStore } from '../store/auth.store'
+import { usePermissionsStore } from '../store/permissions.store'
 import toast from 'react-hot-toast'
 
 const EyeIcon = ({ open }: { open: boolean }) => open ? (
@@ -21,6 +22,7 @@ export function Login() {
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const { setTokens, setUser } = useAuthStore()
+  const loadPermissions = usePermissionsStore(s => s.load)
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,9 +33,10 @@ export function Login() {
       localStorage.setItem('access_token', res.access_token)
       localStorage.setItem('refresh_token', res.refresh_token)
       setTokens(res.access_token, res.refresh_token)
-      setUser({ id: 0, email, username: '', full_name: '', role: 'vendedor', is_active: true, created_at: '', updated_at: '' })
+      const user = await authApi.getCurrentUser()
+      setUser(user)
+      await loadPermissions()
       navigate('/', { replace: true })
-      authApi.getCurrentUser().then(setUser).catch(() => {})
     } catch {
       toast.error('Email o contraseña incorrectos')
     } finally {
