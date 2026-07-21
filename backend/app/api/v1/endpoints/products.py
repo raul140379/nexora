@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.api.v1.deps import get_db, get_current_user
+from app.api.v1.deps import get_db, get_current_user, get_current_admin
 from app.models.user import User
 from app.models.product_price import ProductPrice
 from app.repositories.product_repo import product_repo
@@ -71,7 +71,7 @@ def delete_product(
 @router.delete("")
 def delete_all_products(
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(get_current_admin),
 ):
     products = db.query(product_repo.model).all()
     for p in products:

@@ -4,15 +4,17 @@ from sqlalchemy.orm import Session
 from app.api.v1.deps import get_current_user, get_db
 from app.core.security import verify_token
 from app.models.user import User
-from app.schemas.user import LoginRequest, TokenRequest, TokenResponse, UserCreate, UserResponse
+from app.schemas.user import LoginRequest, TokenRequest, TokenResponse, UserCreate
 from app.services.user_service import user_service
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post("/register", response_model=TokenResponse, status_code=201)
 async def register(data: UserCreate, db: Session = Depends(get_db)):
-    return user_service.register(db, data)
+    user = user_service.register(db, data)
+    access_token, refresh_token = user_service.create_tokens(user.id, user.email)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
 @router.post("/login", response_model=TokenResponse)
