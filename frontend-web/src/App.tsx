@@ -13,6 +13,7 @@ import { Customers } from './pages/Customers'
 import { Sales } from './pages/Sales'
 import { Users } from './pages/Users'
 import { Permissions } from './pages/Permissions'
+import { Reports } from './pages/Reports'
 import { DesignSystem } from './pages/DesignSystem'
 import { Layout } from './components/Layout'
 
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="products"      element={<Products />} />
           <Route path="customers"     element={<RoleRoute roles={['admin','ejecutivo']}><Customers /></RoleRoute>} />
           <Route path="sales"         element={<Sales />} />
+          <Route path="reports"       element={<Reports />} />
           <Route path="design-system" element={<RoleRoute roles={['admin']}><DesignSystem /></RoleRoute>} />
         </Route>
       </Routes>

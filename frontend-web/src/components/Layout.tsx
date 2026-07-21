@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore, ROLE_LABELS, UserRole } from '../store/auth.store'
+import { usePermissionsStore } from '../store/permissions.store'
 import { api } from '../services/api'
 import toast from 'react-hot-toast'
 
-interface NavItem { to: string; label: string; icon: string; exact?: boolean; roles: UserRole[] }
+interface NavItem { to: string; label: string; icon: string; exact?: boolean; roles: UserRole[]; perm?: string }
 
 const navItems: NavItem[] = [
   { to: '/',           label: 'Dashboard',  icon: '▣', exact: true, roles: ['admin', 'ejecutivo', 'vendedor'] },
@@ -12,6 +13,7 @@ const navItems: NavItem[] = [
   { to: '/sales',      label: 'Ventas',     icon: '◆',              roles: ['admin', 'ejecutivo', 'vendedor'] },
   { to: '/customers',  label: 'Clientes',   icon: '◎',              roles: ['admin', 'ejecutivo'] },
   { to: '/categories', label: 'Categorías', icon: '◇',              roles: ['admin', 'ejecutivo'] },
+  { to: '/reports',    label: 'Reportes',   icon: '◑',              roles: ['admin', 'ejecutivo', 'vendedor'], perm: 'view_reports' },
   { to: '/users',         label: 'Usuarios',      icon: '◉',              roles: ['admin'] },
   { to: '/permissions',   label: 'Permisos',      icon: '◐',              roles: ['admin'] },
   { to: '/design-system', label: 'Design System', icon: '◈',              roles: ['admin'] },
@@ -38,6 +40,7 @@ const EMPTY_PW = { current: '', next: '', confirm: '' }
 
 export function Layout() {
   const { user, logout } = useAuthStore()
+  const { has } = usePermissionsStore()
   const navigate = useNavigate()
   const role = (user?.role ?? 'vendedor') as UserRole
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -100,7 +103,7 @@ export function Layout() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.filter(i => i.roles.includes(role)).map(item => (
+        {navItems.filter(i => i.roles.includes(role) && (i.perm ? has(i.perm) : true)).map(item => (
           <NavLink
             key={item.to}
             to={item.to}
