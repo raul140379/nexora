@@ -31,11 +31,12 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         for field, value in data.model_dump(exclude_unset=True).items():
             setattr(obj, field, value)
         db.commit()
+        # expire_on_commit=False mantiene los atributos válidos post-commit.
+        # db.refresh es opcional — solo lo intentamos para obtener valores server-side.
         try:
             db.refresh(obj)
         except Exception:
-            db.rollback()
-            obj = self.get(db, id)
+            pass
         return obj
 
     def delete(self, db: Session, id: int) -> bool:
