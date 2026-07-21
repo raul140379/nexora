@@ -80,21 +80,6 @@ def delete_all_products(
     return {"deleted": len(products)}
 
 
-@router.post("/stock/{pack_price_id}/add")
-def add_stock(
-    pack_price_id: int,
-    data: StockAdjust,
-    db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
-):
-    pp = db.query(ProductPrice).filter(ProductPrice.id == pack_price_id).first()
-    if not pp:
-        raise HTTPException(status_code=404, detail="Presentación no encontrada")
-    pp.stock = max(0, pp.stock + data.quantity)
-    db.commit()
-    return {"id": pp.id, "pack_name": pp.pack_name, "stock": pp.stock}
-
-
 @router.patch("/prices/{pack_price_id}/stock")
 def adjust_stock(
     pack_price_id: int,

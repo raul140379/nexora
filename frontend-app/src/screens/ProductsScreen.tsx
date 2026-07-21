@@ -5,7 +5,6 @@ import {
 } from 'react-native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { api } from '../services/api'
-import { useAuthStore } from '../store/auth.store'
 import { usePermissionsStore } from '../store/permissions.store'
 import { getNameEmoji } from '../utils/helpers'
 
@@ -21,9 +20,7 @@ const EMPTY_PACK: PackForm = { pack_name: '', units_per_pack: '1', price_a: '', 
 const fmt = (v: number | null) => v != null ? `$${Number(v).toFixed(2)}` : '—'
 
 export function ProductsScreen() {
-  const { user } = useAuthStore()
   const { has } = usePermissionsStore()
-  const role = user?.role ?? 'vendedor'
   const canEdit = has('edit_products')
 
   const [products, setProducts] = useState<Product[]>([])
@@ -162,7 +159,7 @@ export function ProductsScreen() {
     if (qty <= 0) { Alert.alert('Error', 'Ingresá una cantidad mayor a 0'); return }
     setStockSaving(true)
     try {
-      await api.post(`/products/stock/${stockModal.packId}/add`, { quantity: qty })
+      await api.patch(`/products/prices/${stockModal.packId}/stock`, { quantity: qty })
       setStockModal(null); load()
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.detail || 'Error al agregar stock')
