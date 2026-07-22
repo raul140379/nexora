@@ -82,10 +82,22 @@ export function SalesScreen({ navigation }: any) {
         discount_pct: parseFloat(discount) || 0,
         items: items.map(i => ({ product_id: i.product_id, pack_price_id: i.pack_price_id, quantity: i.quantity, unit_price: i.unit_price, price_tier_name: i.price_tier_name })),
       })
-      Alert.alert('✓ Venta registrada', `Total cobrado: $${total.toFixed(2)}`)
+      Alert.alert('✓ Venta registrada', `Total cobrado: Bs ${total.toFixed(2)}`)
       setItems([]); setDiscount('0')
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.detail || 'Error al registrar')
+      if (!err.response) {
+        Alert.alert(
+          'Error de conexión',
+          'No se pudo conectar al servidor. Revisá tu internet e intentá de nuevo.\n\nANTES de reintentar, verificá en Historial que la venta no haya sido registrada.'
+        )
+      } else {
+        const status = err.response.status
+        const raw = err.response.data?.detail
+        const detail = typeof raw === 'string' ? raw
+          : raw ? JSON.stringify(raw)
+          : 'Error al registrar la venta'
+        Alert.alert(`Error ${status}`, detail)
+      }
     } finally { setSaving(false) }
   }
 
@@ -148,7 +160,7 @@ export function SalesScreen({ navigation }: any) {
                     style={[styles.tierBtn, selTier === t && { backgroundColor: TIER_COLORS[t], borderColor: TIER_COLORS[t] }]}
                     onPress={() => setSelTier(t)}>
                     <Text style={[styles.tierLabel, selTier === t && { color: '#0F0F0F' }]}>{TIER_LABELS[t]}</Text>
-                    <Text style={[styles.tierPrice, { color: selTier === t ? '#0F0F0F' : TIER_COLORS[t] }]}>${Number(pr).toFixed(2)}</Text>
+                    <Text style={[styles.tierPrice, { color: selTier === t ? '#0F0F0F' : TIER_COLORS[t] }]}>Bs {Number(pr).toFixed(2)}</Text>
                   </TouchableOpacity>
                 )
               })}
@@ -176,7 +188,7 @@ export function SalesScreen({ navigation }: any) {
                 <Text style={styles.itemDetail}>{it.pack_name} · {it.price_label}</Text>
               </View>
               <Text style={styles.itemQty}>{it.quantity}×</Text>
-              <Text style={styles.itemTotal}>${it.subtotal.toFixed(2)}</Text>
+              <Text style={styles.itemTotal}>Bs {it.subtotal.toFixed(2)}</Text>
               <TouchableOpacity onPress={() => setItems(p => p.filter((_, idx) => idx !== i))}>
                 <Text style={{ color: '#ef4444', fontSize: 20, paddingLeft: 10 }}>×</Text>
               </TouchableOpacity>
@@ -191,15 +203,15 @@ export function SalesScreen({ navigation }: any) {
           <Text style={styles.label}>Descuento %</Text>
           <TextInput style={styles.discountInput} value={discount} onChangeText={setDiscount}
             keyboardType="numeric" placeholderTextColor="#4a6fa5" />
-          {parseFloat(discount) > 0 && <Text style={{ color: '#fb923c' }}>−${discountAmt.toFixed(2)}</Text>}
+          {parseFloat(discount) > 0 && <Text style={{ color: '#fb923c' }}>−Bs {discountAmt.toFixed(2)}</Text>}
         </View>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+          <Text style={styles.totalValue}>Bs {total.toFixed(2)}</Text>
         </View>
         <TouchableOpacity style={[styles.saveBtn, (!items.length || saving) && { opacity: 0.5 }]}
           onPress={handleSave} disabled={!items.length || saving}>
-          {saving ? <ActivityIndicator color="#0F0F0F" /> : <Text style={styles.saveBtnText}>Confirmar venta · ${total.toFixed(2)}</Text>}
+          {saving ? <ActivityIndicator color="#0F0F0F" /> : <Text style={styles.saveBtnText}>Confirmar venta · Bs {total.toFixed(2)}</Text>}
         </TouchableOpacity>
         <TouchableOpacity style={styles.historyBtn} onPress={() => navigation.navigate('SalesHistory')}>
           <Text style={styles.historyBtnText}>Ver historial de ventas</Text>

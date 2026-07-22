@@ -28,9 +28,10 @@ const STATUS_COLOR = {
   cancelled: { bg: 'rgba(248,113,113,0.15)', text: '#f87171' },
 }
 
-const fmt = (v: number) => `$${Number(v).toFixed(2)}`
+const fmt = (v: number) => `Bs ${Number(v).toFixed(2)}`
+const toLocal = (s: string) => new Date(s.endsWith('Z') || s.includes('+') ? s : s + 'Z')
 const fmtDate = (s: string) => {
-  const d = new Date(s)
+  const d = toLocal(s)
   return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 
@@ -49,7 +50,7 @@ const DATE_FILTERS = [
 ]
 
 function isInPeriod(dateStr: string, period: string): boolean {
-  const date = new Date(dateStr)
+  const date = toLocal(dateStr)
   const now = new Date()
   if (period === 'today') {
     return date.toDateString() === now.toDateString()
@@ -136,22 +137,26 @@ export function SalesHistoryScreen() {
     <View style={styles.container}>
 
       {/* Filtro por estado */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar} contentContainerStyle={styles.filterRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}
+        style={styles.filterBar} contentContainerStyle={styles.filterRow}>
         {STATUS_FILTERS.map(f => (
           <TouchableOpacity key={f.key}
             style={[styles.chip, filterStatus === f.key && styles.chipActive]}
-            onPress={() => setFilterStatus(f.key)}>
+            onPress={() => setFilterStatus(f.key)}
+            activeOpacity={0.7}>
             <Text style={[styles.chipText, filterStatus === f.key && styles.chipTextActive]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       {/* Filtro por fecha */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[styles.filterBar, { paddingTop: 0 }]} contentContainerStyle={styles.filterRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}
+        style={styles.filterBar} contentContainerStyle={styles.filterRow}>
         {DATE_FILTERS.map(f => (
           <TouchableOpacity key={f.key}
             style={[styles.chip, filterDate === f.key && styles.chipActiveDark]}
-            onPress={() => setFilterDate(f.key)}>
+            onPress={() => setFilterDate(f.key)}
+            activeOpacity={0.7}>
             <Text style={[styles.chipText, filterDate === f.key && styles.chipTextActiveDark]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
@@ -301,8 +306,8 @@ const styles = StyleSheet.create({
   completeBtnText: { fontSize: 13, fontWeight: '700', color: '#4ade80' },
   cancelBtn:       { flex: 1, backgroundColor: 'rgba(248,113,113,0.15)', borderWidth: 1, borderColor: 'rgba(248,113,113,0.4)', borderRadius: 8, padding: 10, alignItems: 'center' },
   cancelBtnText:   { fontSize: 13, fontWeight: '700', color: '#f87171' },
-  filterBar:       { paddingHorizontal: 12, paddingTop: 10 },
-  filterRow:       { flexDirection: 'row', gap: 8, paddingBottom: 4 },
+  filterBar:       { paddingHorizontal: 12, paddingTop: 8, flexGrow: 0, flexShrink: 0 },
+  filterRow:       { flexDirection: 'row', gap: 8, alignItems: 'center', paddingBottom: 6, paddingRight: 12 },
   chip:            { borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, backgroundColor: '#172A46' },
   chipActive:      { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
   chipActiveDark:  { backgroundColor: '#243D66', borderColor: '#D4AF37' },

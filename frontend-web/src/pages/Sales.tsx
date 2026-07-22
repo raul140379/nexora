@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { api } from '../services/api'
 import { useAuthStore } from '../store/auth.store'
 import { usePermissionsStore } from '../store/permissions.store'
@@ -16,6 +16,22 @@ interface Sale {
 }
 
 const statusLabel: Record<string, string> = { completed: 'Completada', pending: 'Pendiente', cancelled: 'Cancelada' }
+
+function isInPeriod(dateStr: string, period: string): boolean {
+  const date = new Date(dateStr)
+  const now  = new Date()
+  if (period === 'today') return date.toDateString() === now.toDateString()
+  if (period === 'week') {
+    const start = new Date(now)
+    start.setDate(now.getDate() - now.getDay())
+    start.setHours(0, 0, 0, 0)
+    return date >= start
+  }
+  if (period === 'month') {
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+  }
+  return true
+}
 const statusColor: Record<string, string> = {
   completed: 'bg-green-900/30 text-green-400 border border-green-800/30',
   pending:   'bg-yellow-900/30 text-yellow-400 border border-yellow-800/30',
@@ -32,6 +48,12 @@ export function Sales() {
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 20
+
+  // Filtros
+  const [search, setSearch]           = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterDate, setFilterDate]   = useState('')
+
   const [showModal, setShowModal] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -54,8 +76,16 @@ export function Sales() {
   const [scanCode, setScanCode] = useState('')
   const scanRef = useRef<HTMLInputElement>(null)
 
-  const load = () => { setLoading(true); api.get('/sales').then(r => { setSales(r.data); setPage(1); setLoading(false) }) }
+  const load = () => {
+    setLoading(true)
+    Promise.all([api.get('/sales'), api.get('/customers')])
+      .then(([sr, cr]) => { setSales(sr.data); setCustomers(cr.data); setPage(1) })
+      .finally(() => setLoading(false))
+  }
   useEffect(() => { load() }, [])
+
+  // Resetear página al cambiar filtros
+  useEffect(() => { setPage(1) }, [search, filterStatus, filterDate])
 
   const openModal = () => {
     Promise.all([api.get('/products').then(r => r.data), api.get('/customers').then(r => r.data)])
@@ -159,8 +189,24 @@ export function Sales() {
     }
   }
 
-  // Filtro por permiso de vista
-  const filtered = sales.filter(s => canViewAll || s.user_id === user?.id)
+  const customerName = (id: number | null) => {
+    if (!id) return 'Consumidor final'
+    const c = customers.find(cu => cu.id === id)
+    return c ? c.name : `#${id}`
+  }
+
+  const filtered = useMemo(() => sales.filter(s => {
+    if (!canViewAll && s.user_id !== user?.id) return false
+    if (filterStatus && s.status !== filterStatus) return false
+    if (filterDate && !isInPeriod(s.created_at, filterDate)) return false
+    if (search) {
+      const q = search.toLowerCase()
+      if (!String(s.id).includes(q) && !customerName(s.customer_id).toLowerCase().includes(q)) return false
+    }
+    return true
+  }), [sales, canViewAll, user?.id, filterStatus, filterDate, search, customers])
+
+  const filteredTotal = filtered.reduce((sum, s) => sum + Number(s.total), 0)
 
   const colCount = 5 + (canViewRevenue ? 3 : 0)
 
@@ -178,6 +224,44 @@ export function Sales() {
         <button onClick={openModal} className="bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold px-4 py-2 rounded-lg">
           + Nueva venta
         </button>
+      </div>
+
+      {/* Filtros */}
+      <div className="mb-4 space-y-2">
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Buscar por # o cliente..."
+          className="w-full sm:max-w-xs border border-white/10 rounded-lg px-3 py-2 text-sm bg-[#243D66] text-gray-200 placeholder-[#6B7280] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+        />
+        <div className="flex flex-wrap gap-2">
+          {([['', 'Todas'], ['pending', 'Pendiente'], ['completed', 'Completada'], ['cancelled', 'Cancelada']] as [string, string][]).map(([val, label]) => (
+            <button key={val} onClick={() => setFilterStatus(val)}
+              className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${filterStatus === val ? 'bg-[#D4AF37] text-[#0F0F0F] border-[#D4AF37]' : 'border-white/20 text-[#6B7280] hover:text-gray-200'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {([['', 'Siempre'], ['today', 'Hoy'], ['week', 'Esta semana'], ['month', 'Este mes']] as [string, string][]).map(([val, label]) => (
+            <button key={val} onClick={() => setFilterDate(val)}
+              className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${filterDate === val ? 'bg-[#4A90D9] text-white border-[#4A90D9]' : 'border-white/20 text-[#6B7280] hover:text-gray-200'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {(search || filterStatus || filterDate) && (
+          <div className="flex flex-wrap items-center gap-4 text-sm pt-1">
+            <span className="text-[#6B7280]">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
+            {canViewRevenue && filtered.length > 0 && (
+              <span className="text-[#D4AF37] font-semibold">Total: ${filteredTotal.toFixed(2)}</span>
+            )}
+            <button onClick={() => { setSearch(''); setFilterStatus(''); setFilterDate('') }}
+              className="text-xs text-[#6B7280] hover:text-gray-300 underline">
+              Limpiar filtros
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="bg-[#243D66] rounded-xl shadow-sm overflow-x-auto -mx-4 md:mx-0 md:rounded-xl">
@@ -207,7 +291,7 @@ export function Sales() {
                   <tr key={s.id} className="hover:bg-[#1E3557] cursor-pointer" onClick={() => setExpanded(isExpanded ? null : s.id)}>
                     <td className="px-4 py-3 text-[#6B7280] font-mono text-xs">#{s.id}</td>
                     <td className="px-4 py-3 text-[#6B7280]">{new Date(s.created_at).toLocaleDateString('es-AR')}</td>
-                    <td className="px-4 py-3 text-[#6B7280]">{s.customer_id ? `#${s.customer_id}` : 'Consumidor'}</td>
+                    <td className="px-4 py-3 text-[#6B7280]">{customerName(s.customer_id)}</td>
                     <td className="px-4 py-3 text-[#6B7280]">{s.items.length}</td>
                     {canViewRevenue && <>
                       <td className="px-4 py-3 text-[#6B7280]">${sub.toFixed(2)}</td>

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import {
   View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
   Modal, ScrollView, Alert, ActivityIndicator
 } from 'react-native'
+import { useFocusEffect } from '@react-navigation/native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import { api } from '../services/api'
 import { usePermissionsStore } from '../store/permissions.store'
@@ -17,7 +18,7 @@ interface PackForm { pack_name: string; units_per_pack: string; price_a: string;
 
 const EMPTY_FORM = { name: '', sku: '', description: '', category_id: '', subcategory_id: '' }
 const EMPTY_PACK: PackForm = { pack_name: '', units_per_pack: '1', price_a: '', price_b: '', price_c: '', stock: '0' }
-const fmt = (v: number | null) => v != null ? `$${Number(v).toFixed(2)}` : '—'
+const fmt = (v: number | null) => v != null ? `Bs ${Number(v).toFixed(2)}` : '—'
 
 export function ProductsScreen() {
   const { has } = usePermissionsStore()
@@ -30,6 +31,8 @@ export function ProductsScreen() {
   const [search, setSearch] = useState('')
   const [filterCatId, setFilterCatId] = useState('')
   const [filterSubId, setFilterSubId] = useState('')
+
+
 
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -79,7 +82,7 @@ export function ProductsScreen() {
     }).catch(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useFocusEffect(useCallback(() => { load() }, []))
 
   const filterSubs = subcategories.filter(s => !filterCatId || s.category_id === Number(filterCatId))
 
@@ -92,6 +95,8 @@ export function ProductsScreen() {
   })
 
   const filteredSubs = subcategories.filter(s => !form.category_id || s.category_id === Number(form.category_id))
+  const selectedCat = categories.find(c => String(c.id) === form.category_id)
+  const selectedSub = filteredSubs.find(s => String(s.id) === form.subcategory_id)
 
   const openCreate = () => {
     setEditingId(null)
@@ -135,7 +140,9 @@ export function ProductsScreen() {
     try {
       if (editingId) { await api.put(`/products/${editingId}`, payload) }
       else { await api.post('/products', payload) }
-      setShowModal(false); load()
+      setShowModal(false)
+      load()
+      Alert.alert('Listo', editingId ? 'Producto actualizado' : 'Producto creado')
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.detail || 'Error al guardar')
     } finally { setSaving(false) }
@@ -189,44 +196,63 @@ export function ProductsScreen() {
 
       {/* Filtro por categoría */}
       <View style={styles.filterBar}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.chipRow}>
-            <TouchableOpacity style={[styles.chip, !filterCatId && styles.chipActive]}
-              onPress={() => { setFilterCatId(''); setFilterSubId('') }}>
-              <Text style={[styles.chipText, !filterCatId && styles.chipTextActive]}>Todas</Text>
-            </TouchableOpacity>
-            {categories.map(c => (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+          <TouchableOpacity
+            style={[styles.chip, !filterCatId && styles.chipActive]}
+            onPress={() => { setFilterCatId(''); setFilterSubId('') }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.chipText, !filterCatId && styles.chipTextActive]}>Todas</Text>
+            {!filterCatId && (
+              <View style={styles.chipCount}><Text style={styles.chipCountText}>{products.length}</Text></View>
+            )}
+          </TouchableOpacity>
+          {categories.map(c => {
+            const isActive = filterCatId === String(c.id)
+            const count = products.filter(p => p.category?.id === c.id).length
+            return (
               <TouchableOpacity key={c.id}
-                style={[styles.chip, filterCatId === String(c.id) && styles.chipActive]}
-                onPress={() => { setFilterCatId(String(c.id)); setFilterSubId('') }}>
-                <Text style={[styles.chipText, filterCatId === String(c.id) && styles.chipTextActive]}>
+                style={[styles.chip, isActive && styles.chipActive]}
+                onPress={() => { setFilterCatId(String(c.id)); setFilterSubId('') }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
                   {getNameEmoji(c.name)} {c.name}
                 </Text>
+                {isActive && (
+                  <View style={styles.chipCount}><Text style={styles.chipCountText}>{count}</Text></View>
+                )}
               </TouchableOpacity>
-            ))}
-          </View>
+            )
+          })}
         </ScrollView>
       </View>
 
       {/* Filtro por subcategoría */}
       {filterCatId && filterSubs.length > 0 && (
-        <View style={[styles.filterBar, { paddingTop: 0 }]}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.chipRow}>
-              <TouchableOpacity style={[styles.chip, !filterSubId && styles.chipActive]}
-                onPress={() => setFilterSubId('')}>
-                <Text style={[styles.chipText, !filterSubId && styles.chipTextActive]}>Todas</Text>
-              </TouchableOpacity>
-              {filterSubs.map(s => (
+        <View style={styles.subFilterBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+            <TouchableOpacity
+              style={[styles.subChip, !filterSubId && styles.subChipActive]}
+              onPress={() => setFilterSubId('')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.subChipText, !filterSubId && styles.subChipTextActive]}>Todas</Text>
+            </TouchableOpacity>
+            {filterSubs.map(s => {
+              const isActive = filterSubId === String(s.id)
+              return (
                 <TouchableOpacity key={s.id}
-                  style={[styles.chip, filterSubId === String(s.id) && styles.chipActive]}
-                  onPress={() => setFilterSubId(String(s.id))}>
-                  <Text style={[styles.chipText, filterSubId === String(s.id) && styles.chipTextActive]}>
+                  style={[styles.subChip, isActive && styles.subChipActive]}
+                  onPress={() => setFilterSubId(String(s.id))}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.subChipText, isActive && styles.subChipTextActive]}>
                     {getNameEmoji(s.name)} {s.name}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </View>
+              )
+            })}
           </ScrollView>
         </View>
       )}
@@ -300,37 +326,59 @@ export function ProductsScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* ── Categoría chips ── */}
             <Text style={styles.label}>Categoría</Text>
-            <View style={styles.chipWrap}>
-              <TouchableOpacity style={[styles.chip, !form.category_id && styles.chipActive]}
-                onPress={() => setForm(p => ({ ...p, category_id: '', subcategory_id: '' }))}>
-                <Text style={[styles.chipText, !form.category_id && styles.chipTextActive]}>Ninguna</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+              <TouchableOpacity
+                style={[styles.chip, !form.category_id && styles.chipActive]}
+                onPress={() => setForm(p => ({ ...p, category_id: '', subcategory_id: '' }))}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.chipText, !form.category_id && styles.chipTextActive]}>Sin cat.</Text>
               </TouchableOpacity>
-              {categories.map(c => (
-                <TouchableOpacity key={c.id}
-                  style={[styles.chip, form.category_id === String(c.id) && styles.chipActive]}
-                  onPress={() => setForm(p => ({ ...p, category_id: String(c.id), subcategory_id: '' }))}>
-                  <Text style={[styles.chipText, form.category_id === String(c.id) && styles.chipTextActive]}>
-                    {getNameEmoji(c.name)} {c.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+              {categories.map(c => {
+                const isActive = form.category_id === String(c.id)
+                return (
+                  <TouchableOpacity key={c.id}
+                    style={[styles.chip, isActive && styles.chipActive]}
+                    onPress={() => setForm(p => ({ ...p, category_id: String(c.id), subcategory_id: '' }))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                      {getNameEmoji(c.name)} {c.name}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              })}
+            </ScrollView>
 
+            {/* ── Subcategoría chips ── */}
             {form.category_id && filteredSubs.length > 0 && (
               <>
                 <Text style={styles.label}>Subcategoría</Text>
-                <View style={styles.chipWrap}>
-                  {filteredSubs.map(s => (
-                    <TouchableOpacity key={s.id}
-                      style={[styles.chip, form.subcategory_id === String(s.id) && styles.chipActive]}
-                      onPress={() => setForm(p => ({ ...p, subcategory_id: String(s.id) }))}>
-                      <Text style={[styles.chipText, form.subcategory_id === String(s.id) && styles.chipTextActive]}>
-                        {getNameEmoji(s.name)} {s.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+                  <TouchableOpacity
+                    style={[styles.subChip, !form.subcategory_id && styles.subChipActive]}
+                    onPress={() => setForm(p => ({ ...p, subcategory_id: '' }))}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.subChipText, !form.subcategory_id && styles.subChipTextActive]}>Sin sub.</Text>
+                  </TouchableOpacity>
+                  {filteredSubs.map(s => {
+                    const isActive = form.subcategory_id === String(s.id)
+                    return (
+                      <TouchableOpacity key={s.id}
+                        style={[styles.subChip, isActive && styles.subChipActive]}
+                        onPress={() => setForm(p => ({ ...p, subcategory_id: String(s.id) }))}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.subChipText, isActive && styles.subChipTextActive]}>
+                          {getNameEmoji(s.name)} {s.name}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  })}
+                </ScrollView>
               </>
             )}
 
@@ -452,7 +500,8 @@ export function ProductsScreen() {
 const styles = StyleSheet.create({
   container:     { flex: 1, backgroundColor: '#1E3557' },
   topBar:        { flexDirection: 'row', padding: 12, gap: 8, alignItems: 'center' },
-  filterBar:     { paddingHorizontal: 12, paddingBottom: 8 },
+  filterBar:     { paddingHorizontal: 12, paddingBottom: 6 },
+  subFilterBar:  { paddingHorizontal: 12, paddingBottom: 6, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', paddingTop: 6 },
   description:   { fontSize: 11, color: '#64748b', marginTop: 2, fontStyle: 'italic' },
   searchInput:   { flex: 1, backgroundColor: '#172A46', borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#e2e8f0' },
   addBtn:        { backgroundColor: '#D4AF37', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
@@ -475,12 +524,23 @@ const styles = StyleSheet.create({
   stockBtn:      { backgroundColor: 'rgba(34,197,94,0.15)', borderRadius: 5, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: 'rgba(34,197,94,0.3)' },
   stockBtnText:  { color: '#4ade80', fontWeight: '800', fontSize: 14 },
   empty:         { textAlign: 'center', color: '#64748b', marginTop: 40 },
-  chipRow:       { flexDirection: 'row', gap: 8, paddingVertical: 4 },
-  chipWrap:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingVertical: 4, marginBottom: 4 },
-  chip:          { borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: '#172A46' },
-  chipActive:    { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
-  chipText:      { fontSize: 12, fontWeight: '600', color: '#94a3b8' },
-  chipTextActive:{ color: '#0F0F0F' },
+
+  // Chips: filtro principal (horizontal scroll)
+  chipRow:        { flexDirection: 'row', gap: 8, paddingVertical: 4, alignItems: 'center' },
+  chip:           { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: '#2d4a6e', borderRadius: 20, paddingHorizontal: 13, paddingVertical: 7, backgroundColor: '#172A46' },
+  chipActive:     { backgroundColor: '#D4AF37', borderColor: '#D4AF37' },
+  chipText:       { fontSize: 12, fontWeight: '600', color: '#94a3b8' },
+  chipTextActive: { color: '#0F0F0F' },
+  chipCount:      { backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 1, minWidth: 20, alignItems: 'center' },
+  chipCountText:  { fontSize: 10, fontWeight: '700', color: '#0F0F0F' },
+
+  // Sub-chips (subcategoría — fila horizontal más compacta)
+  subChip:           { borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)', borderRadius: 16, paddingHorizontal: 11, paddingVertical: 5, backgroundColor: 'transparent' },
+  subChipActive:     { backgroundColor: 'rgba(212,175,55,0.2)', borderColor: '#D4AF37' },
+  subChipText:       { fontSize: 11, fontWeight: '600', color: '#64748b' },
+  subChipTextActive: { color: '#D4AF37' },
+
+  // Modal form
   overlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
   modalBox:      { backgroundColor: '#1E3557', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
   stockBox:      { backgroundColor: '#243D66', borderRadius: 16, margin: 24, padding: 20 },
@@ -503,9 +563,10 @@ const styles = StyleSheet.create({
   skuRow:        { flexDirection: 'row', gap: 8, alignItems: 'center' },
   skuBtn:        { backgroundColor: 'rgba(212,175,55,0.1)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)', borderRadius: 10, padding: 10, alignItems: 'center', justifyContent: 'center' },
   skuBtnText:    { fontSize: 18, color: '#D4AF37' },
-  scanOverlay:   { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  scanFrame:     { width: 260, height: 160, borderWidth: 3, borderColor: '#D4AF37', borderRadius: 12, marginBottom: 24 },
-  scanHint:      { color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 32, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  scanCloseBtn:  { backgroundColor: '#D4AF37', borderRadius: 10, paddingHorizontal: 32, paddingVertical: 12 },
+
+  scanOverlay:      { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  scanFrame:        { width: 260, height: 160, borderWidth: 3, borderColor: '#D4AF37', borderRadius: 12, marginBottom: 24 },
+  scanHint:         { color: '#fff', fontSize: 14, fontWeight: '600', textAlign: 'center', marginBottom: 32, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  scanCloseBtn:     { backgroundColor: '#D4AF37', borderRadius: 10, paddingHorizontal: 32, paddingVertical: 12 },
   scanCloseBtnText: { color: '#0F0F0F', fontWeight: '700', fontSize: 15 },
 })

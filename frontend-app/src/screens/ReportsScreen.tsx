@@ -34,7 +34,7 @@ function inPeriod(dateStr: string, period: string): boolean {
   return true
 }
 
-const fmt = (v: number) => `$${Number(v).toFixed(2)}`
+const fmt = (v: number) => `Bs ${Number(v).toFixed(2)}`
 
 function HBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.max(4, (value / max) * 100) : 4
@@ -208,7 +208,7 @@ export function ReportsScreen() {
                 const barH = maxDaily > 0 ? Math.max(4, (d.value / maxDaily) * 80) : 4
                 return (
                   <View key={i} style={styles.dailyCol}>
-                    <Text style={styles.dailyVal}>{d.value > 0 ? `$${Math.round(d.value)}` : ''}</Text>
+                    <Text style={styles.dailyVal}>{d.value > 0 ? `Bs ${Math.round(d.value)}` : ''}</Text>
                     <View style={styles.dailyBarWrap}>
                       <View style={[styles.dailyBar, { height: barH, backgroundColor: d.value > 0 ? '#D4AF37' : '#172A46' }]} />
                     </View>
