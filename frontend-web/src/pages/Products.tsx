@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../services/api'
 import { Pagination } from '../components/ui'
 import toast from 'react-hot-toast'
@@ -146,6 +146,9 @@ export function Products() {
   const [filterCat, setFilterCat] = useState('__all__')
   const [filterSub, setFilterSub] = useState('__all__')
   const [filterPack, setFilterPack] = useState('__all__')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [sortCol, setSortCol] = useState<'name' | 'price_a' | 'stock' | null>(null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const [page, setPage] = useState(1)
   const PAGE_SIZE = 25
   const [searchScanMode, setSearchScanMode] = useState(false)
@@ -161,7 +164,9 @@ export function Products() {
 
   const [stockModal, setStockModal] = useState<{ packId: number; packName: string; productName: string; current: number } | null>(null)
   const [stockQty, setStockQty] = useState('1')
+  const [stockMode, setStockMode] = useState<'add' | 'subtract'>('add')
   const [stockSaving, setStockSaving] = useState(false)
+  const [toggling, setToggling] = useState<number | null>(null)
 
   const [deleteModal, setDeleteModal] = useState<{ id: number; name: string } | 'all' | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
@@ -170,7 +175,9 @@ export function Products() {
   const load = () => {
     setLoading(true)
     Promise.all([api.get('/products').then(r => r.data), api.get('/categories').then(r => r.data)])
-      .then(([prods, cats]) => { setProducts(prods); setCategories(cats); setLoading(false) })
+      .then(([prods, cats]) => { setProducts(prods); setCategories(cats) })
+      .catch(() => toast.error('Error al cargar productos'))
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [])
@@ -190,18 +197,34 @@ export function Products() {
   const allPackNames = Array.from(new Set(products.flatMap(p => p.prices.map(pr => pr.pack_name)))).sort()
 
   type Row = { product: Product; price: ProductPrice }
-  const rows: Row[] = products.flatMap(p =>
-    p.prices.map(pr => ({ product: p, price: pr }))
-  ).filter(r => {
-    if (filterCat !== '__all__' && r.product.category?.id !== parseInt(filterCat)) return false
-    if (filterSub !== '__all__' && r.product.subcategory?.id !== parseInt(filterSub)) return false
-    if (filterPack !== '__all__' && r.price.pack_name !== filterPack) return false
-    if (searchText.trim()) {
-      const q = searchText.toLowerCase()
-      if (!r.product.name.toLowerCase().includes(q) && !(r.product.sku ?? '').toLowerCase().includes(q)) return false
-    }
-    return true
-  })
+  const rows = useMemo<Row[]>(() => {
+    const filtered = products.flatMap(p =>
+      p.prices.map(pr => ({ product: p, price: pr }))
+    ).filter(r => {
+      if (filterCat !== '__all__' && r.product.category?.id !== parseInt(filterCat)) return false
+      if (filterSub !== '__all__' && r.product.subcategory?.id !== parseInt(filterSub)) return false
+      if (filterPack !== '__all__' && r.price.pack_name !== filterPack) return false
+      if (filterStatus === 'active'    && (!r.product.is_active || r.price.stock === 0)) return false
+      if (filterStatus === 'inactive'  && r.product.is_active) return false
+      if (filterStatus === 'low_stock' && !(r.product.is_active && r.price.stock > 0 && r.price.stock <= 5)) return false
+      if (filterStatus === 'no_stock'  && !(r.product.is_active && r.price.stock === 0)) return false
+      if (searchText.trim()) {
+        const q = searchText.toLowerCase()
+        if (!r.product.name.toLowerCase().includes(q) && !(r.product.sku ?? '').toLowerCase().includes(q)) return false
+      }
+      return true
+    })
+    if (!sortCol) return filtered
+    return [...filtered].sort((a, b) => {
+      let va: number | string, vb: number | string
+      if (sortCol === 'name')    { va = a.product.name.toLowerCase(); vb = b.product.name.toLowerCase() }
+      else if (sortCol === 'price_a') { va = a.price.price_a; vb = b.price.price_a }
+      else { va = a.price.stock; vb = b.price.stock }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1
+      if (va > vb) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+  }, [products, filterCat, filterSub, filterPack, filterStatus, searchText, sortCol, sortDir])
 
   const activateSearchScan = () => {
     setSearchText('')
@@ -263,6 +286,7 @@ export function Products() {
   const openStockModal = (product: Product, pr: ProductPrice) => {
     setStockModal({ packId: pr.id, packName: pr.pack_name, productName: product.name, current: pr.stock })
     setStockQty('1')
+    setStockMode('add')
   }
 
   const handleAddStock = async () => {
@@ -270,11 +294,35 @@ export function Products() {
     const qty = parseInt(stockQty)
     if (!qty || qty <= 0) { toast.error('Ingresá una cantidad válida'); return }
     setStockSaving(true)
+    const delta = stockMode === 'add' ? qty : -qty
     try {
-      await api.patch(`/products/prices/${stockModal.packId}/stock`, { quantity: qty })
-      toast.success(`+${qty} unidades agregadas a ${stockModal.packName}`)
+      await api.patch(`/products/prices/${stockModal.packId}/stock`, { quantity: delta })
+      toast.success(stockMode === 'add' ? `+${qty} unidades agregadas` : `-${qty} unidades descontadas`)
       setStockModal(null); load()
     } catch { toast.error('Error al actualizar stock') } finally { setStockSaving(false) }
+  }
+
+  const toggleActive = async (p: Product) => {
+    setToggling(p.id)
+    try {
+      await api.patch(`/products/${p.id}`, { is_active: !p.is_active })
+      setProducts(prev => prev.map(prod => prod.id === p.id ? { ...prod, is_active: !prod.is_active } : prod))
+      toast.success(p.is_active ? `"${p.name}" desactivado` : `"${p.name}" activado`)
+    } catch { toast.error('Error al cambiar estado') } finally { setToggling(null) }
+  }
+
+  const exportCSV = () => {
+    const header = ['ID', 'Nombre', 'SKU', 'Categoría', 'Subcategoría', 'Empaque', 'Precio A', 'Precio B', 'Precio C', 'Stock', 'Estado']
+    const csvRows = rows.map(({ product: p, price: pr }) => [
+      p.id, `"${p.name}"`, p.sku || '', p.category?.name || '', p.subcategory?.name || '',
+      pr.pack_name, pr.price_a, pr.price_b ?? '', pr.price_c ?? '', pr.stock,
+      p.is_active ? (pr.stock === 0 ? 'Sin stock' : pr.stock <= 5 ? 'Stock bajo' : 'Activo') : 'Inactivo'
+    ].join(','))
+    const csv = [header.join(','), ...csvRows].join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }))
+    const a = document.createElement('a'); a.href = url; a.download = 'productos.csv'; a.click()
+    URL.revokeObjectURL(url)
+    toast.success(`${rows.length} productos exportados`)
   }
 
   const handleDelete = async () => {
@@ -310,7 +358,9 @@ export function Products() {
       editingId ? await api.put(`/products/${editingId}`, payload) : await api.post('/products', payload)
       toast.success(editingId ? 'Producto actualizado' : 'Producto creado')
       setShowModal(false); load()
-    } catch { toast.error('Error al guardar') } finally { setSaving(false) }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Error al guardar')
+    } finally { setSaving(false) }
   }
 
   // ── Loading ───────────────────────────────────────────────────────────────
@@ -325,15 +375,26 @@ export function Products() {
 
   // ── Derived values ────────────────────────────────────────────────────────
   const kpis = [
-    { label: 'Productos',  value: products.length,                                                                               icon: <IcoBox />,     iconBg: 'bg-[#D4AF37]/15', iconCl: 'text-[#D4AF37]', desc: 'Total en catálogo'       },
-    { label: 'Activos',    value: products.filter(p => p.is_active).length,                                                      icon: <IcoOk />,      iconBg: 'bg-green-900/30',  iconCl: 'text-green-400',   desc: 'Disponibles para venta' },
-    { label: 'Stock Bajo', value: products.filter(p => p.prices.some(pr => pr.stock > 0 && pr.stock <= 5)).length,               icon: <IcoWarn />,    iconBg: 'bg-orange-900/30', iconCl: 'text-orange-400',  desc: '5 unidades o menos'     },
-    { label: 'Sin Stock',  value: products.filter(p => p.prices.length > 0 && p.prices.every(pr => pr.stock === 0)).length,      icon: <IcoXCircle />, iconBg: 'bg-red-900/30',    iconCl: 'text-red-400',     desc: 'Requieren reposición'   },
+    { key: '',          label: 'Productos',  value: products.length,                                                                               icon: <IcoBox />,     iconBg: 'bg-[#D4AF37]/15', iconCl: 'text-[#D4AF37]', desc: 'Total en catálogo'       },
+    { key: 'active',    label: 'Activos',    value: products.filter(p => p.is_active).length,                                                      icon: <IcoOk />,      iconBg: 'bg-green-900/30',  iconCl: 'text-green-400',   desc: 'Disponibles para venta' },
+    { key: 'low_stock', label: 'Stock Bajo', value: products.filter(p => p.prices.some(pr => pr.stock > 0 && pr.stock <= 5)).length,               icon: <IcoWarn />,    iconBg: 'bg-orange-900/30', iconCl: 'text-orange-400',  desc: '5 unidades o menos'     },
+    { key: 'no_stock',  label: 'Sin Stock',  value: products.filter(p => p.prices.length > 0 && p.prices.every(pr => pr.stock === 0)).length,      icon: <IcoXCircle />, iconBg: 'bg-red-900/30',    iconCl: 'text-red-400',     desc: 'Requieren reposición'   },
   ]
 
   const maxStockVal = Math.max(...products.flatMap(p => p.prices.map(pr => pr.stock)), 1)
-  const hasActiveFilters = filterCat !== '__all__' || filterSub !== '__all__' || filterPack !== '__all__' || !!searchText
-  const clearFilters = () => { setSearchText(''); setFilterCat('__all__'); setFilterSub('__all__'); setFilterPack('__all__') }
+  const hasActiveFilters = filterCat !== '__all__' || filterSub !== '__all__' || filterPack !== '__all__' || !!searchText || !!filterStatus
+  const clearFilters = () => { setSearchText(''); setFilterCat('__all__'); setFilterSub('__all__'); setFilterPack('__all__'); setFilterStatus('') }
+
+  const handleSort = (col: 'name' | 'price_a' | 'stock') => {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortCol(col); setSortDir('asc') }
+    setPage(1)
+  }
+  const SortIcon = ({ col }: { col: 'name' | 'price_a' | 'stock' }) => (
+    <span className={`ml-1 inline-block transition-opacity ${sortCol === col ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'}`}>
+      {sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}
+    </span>
+  )
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -356,8 +417,8 @@ export function Products() {
               <IcoUl /><span className="hidden sm:inline">Importar</span>
             </button>
           </Tip>
-          <Tip label="Exportar a CSV">
-            <button onClick={() => toast('Próximamente disponible')} aria-label="Exportar" className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-100 bg-[#172A46] hover:bg-[#1B2A49] border border-white/10 px-3 py-2 rounded-lg transition-all duration-200">
+          <Tip label="Exportar vista actual a CSV">
+            <button onClick={exportCSV} aria-label="Exportar" className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-100 bg-[#172A46] hover:bg-[#1B2A49] border border-white/10 px-3 py-2 rounded-lg transition-all duration-200">
               <IcoDl /><span className="hidden sm:inline">Exportar</span>
             </button>
           </Tip>
@@ -369,18 +430,34 @@ export function Products() {
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map(k => (
-          <div key={k.label} className="bg-[#243D66] rounded-xl p-5 border border-white/5 shadow-sm hover:border-white/10 hover:shadow-md transition-all duration-200 group">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`w-10 h-10 ${k.iconBg} rounded-lg flex items-center justify-center ${k.iconCl} transition-transform duration-200 group-hover:scale-110`}>
-                {k.icon}
+        {kpis.map(k => {
+          const isActive = filterStatus === k.key
+          return (
+            <button
+              key={k.label}
+              onClick={() => { setFilterStatus(isActive ? '' : k.key); setPage(1) }}
+              className={`text-left bg-[#243D66] rounded-xl p-5 border shadow-sm transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] relative overflow-hidden ${
+                isActive
+                  ? 'border-[#D4AF37]/60 shadow-[0_0_0_1px_rgba(212,175,55,0.3)] bg-[#1E3557]'
+                  : 'border-white/5 hover:border-white/15 hover:shadow-md cursor-pointer'
+              }`}
+            >
+              {isActive && (
+                <span className="absolute top-2 right-2 text-[10px] font-bold text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/30 px-1.5 py-0.5 rounded-full">
+                  Filtrando
+                </span>
+              )}
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-10 h-10 ${k.iconBg} rounded-lg flex items-center justify-center ${k.iconCl} transition-transform duration-200 group-hover:scale-110`}>
+                  {k.icon}
+                </div>
               </div>
-            </div>
-            <div className={`text-3xl font-bold ${k.iconCl} tabular-nums`}>{k.value}</div>
-            <div className="text-sm font-medium text-gray-200 mt-0.5">{k.label}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{k.desc}</div>
-          </div>
-        ))}
+              <div className={`text-3xl font-bold tabular-nums transition-colors ${isActive ? 'text-[#D4AF37]' : k.iconCl}`}>{k.value}</div>
+              <div className="text-sm font-medium text-gray-200 mt-0.5">{k.label}</div>
+              <div className="text-xs text-gray-500 mt-0.5">{k.desc}</div>
+            </button>
+          )
+        })}
       </div>
 
       {/* ── Search + Filters ── */}
@@ -497,13 +574,25 @@ export function Products() {
           <table className="w-full text-sm min-w-[820px]">
             <thead className="bg-[#172A46] border-b border-[#1E3557]">
               <tr>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Producto</th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <button onClick={() => handleSort('name')} className="group flex items-center gap-0.5 hover:text-gray-200 transition-colors">
+                    Producto <SortIcon col="name" />
+                  </button>
+                </th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Categoría</th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Empaque</th>
-                <th className="px-3 py-3.5 text-center text-xs font-semibold text-blue-400 uppercase tracking-wider">Precio A</th>
+                <th className="px-3 py-3.5 text-center text-xs font-semibold text-blue-400 uppercase tracking-wider">
+                  <button onClick={() => handleSort('price_a')} className="group flex items-center justify-center gap-0.5 w-full hover:text-blue-300 transition-colors">
+                    Precio A <SortIcon col="price_a" />
+                  </button>
+                </th>
                 <th className="px-3 py-3.5 text-center text-xs font-semibold text-green-400 uppercase tracking-wider">Precio B</th>
                 <th className="px-3 py-3.5 text-center text-xs font-semibold text-orange-400 uppercase tracking-wider">Precio C</th>
-                <th className="px-4 py-3.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Stock</th>
+                <th className="px-4 py-3.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                  <button onClick={() => handleSort('stock')} className="group flex items-center justify-center gap-0.5 w-full hover:text-gray-200 transition-colors">
+                    Stock <SortIcon col="stock" />
+                  </button>
+                </th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</th>
                 <th className="px-4 py-3.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
               </tr>
@@ -598,13 +687,29 @@ export function Products() {
                             <IcoEdit />
                           </button>
                         </Tip>
-                        <Tip label="Reponer stock">
+                        <Tip label="Ajustar stock">
                           <button
                             onClick={() => openStockModal(p, pr)}
-                            aria-label="Reponer stock"
+                            aria-label="Ajustar stock"
                             className="p-2 rounded-lg text-gray-500 hover:text-green-400 hover:bg-green-900/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                           >
                             <IcoPlus />
+                          </button>
+                        </Tip>
+                        <Tip label={p.is_active ? 'Desactivar producto' : 'Activar producto'}>
+                          <button
+                            onClick={() => toggleActive(p)}
+                            disabled={toggling === p.id}
+                            aria-label={p.is_active ? 'Desactivar' : 'Activar'}
+                            className={`p-2 rounded-lg transition-all duration-200 focus:outline-none focus-visible:ring-2 disabled:opacity-40 ${
+                              p.is_active
+                                ? 'text-green-500 hover:text-gray-400 hover:bg-white/5 focus-visible:ring-green-500'
+                                : 'text-gray-600 hover:text-green-400 hover:bg-green-900/20 focus-visible:ring-green-500'
+                            }`}
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" />
+                            </svg>
                           </button>
                         </Tip>
                         <Tip label="Eliminar producto">
@@ -640,40 +745,71 @@ export function Products() {
         )}
       </div>
 
-      {/* ── Modal reponer stock ── */}
+      {/* ── Modal ajustar stock ── */}
       {stockModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#243D66] rounded-2xl shadow-2xl border border-white/10 w-full max-w-sm p-6 animate-in fade-in zoom-in duration-200">
+          <div className="bg-[#243D66] rounded-2xl shadow-2xl border border-white/10 w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl bg-green-900/30 flex items-center justify-center text-green-400">
-                <IcoPlus />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${stockMode === 'add' ? 'bg-green-900/30 text-green-400' : 'bg-orange-900/30 text-orange-400'}`}>
+                {stockMode === 'add' ? <IcoPlus /> : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4"/></svg>}
               </div>
               <div>
-                <h3 className="text-base font-semibold text-gray-100">Reponer stock</h3>
+                <h3 className="text-base font-semibold text-gray-100">Ajustar stock</h3>
                 <p className="text-xs text-gray-400 mt-0.5">{stockModal.productName} · {stockModal.packName}</p>
               </div>
             </div>
+
+            {/* Modo add / subtract */}
+            <div className="flex rounded-lg overflow-hidden border border-white/10 mb-5">
+              <button onClick={() => setStockMode('add')}
+                className={`flex-1 py-2 text-sm font-semibold transition-colors ${stockMode === 'add' ? 'bg-green-900/40 text-green-300' : 'bg-[#172A46] text-gray-500 hover:text-gray-300'}`}>
+                + Agregar
+              </button>
+              <button onClick={() => setStockMode('subtract')}
+                className={`flex-1 py-2 text-sm font-semibold transition-colors ${stockMode === 'subtract' ? 'bg-orange-900/40 text-orange-300' : 'bg-[#172A46] text-gray-500 hover:text-gray-300'}`}>
+                − Reducir
+              </button>
+            </div>
+
             <div className="bg-[#172A46] rounded-lg px-4 py-3 mb-5 flex items-center justify-between">
               <span className="text-xs text-gray-400">Stock actual</span>
               <span className={`font-bold text-lg ${stockModal.current === 0 ? 'text-red-400' : 'text-gray-100'}`}>{stockModal.current}</span>
             </div>
+
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-300 mb-2">Cantidad a agregar</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                {stockMode === 'add' ? 'Cantidad a agregar' : 'Cantidad a reducir'}
+              </label>
               <input value={stockQty} onChange={e => setStockQty(e.target.value)}
                 type="number" min="1" autoFocus
-                className="w-full bg-[#172A46] border border-white/10 rounded-lg px-3 py-3 text-center text-2xl font-bold text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all" />
-              {parseInt(stockQty) > 0 && (
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Nuevo total: <span className="font-bold text-green-400">{stockModal.current + (parseInt(stockQty) || 0)}</span>
-                </p>
-              )}
+                className={`w-full border rounded-lg px-3 py-3 text-center text-2xl font-bold text-gray-100 focus:outline-none focus:ring-2 transition-all bg-[#172A46] ${
+                  stockMode === 'add' ? 'border-white/10 focus:ring-green-500' : 'border-orange-900/40 focus:ring-orange-500'
+                }`} />
+              {parseInt(stockQty) > 0 && (() => {
+                const qty = parseInt(stockQty) || 0
+                const next = stockMode === 'add' ? stockModal.current + qty : Math.max(0, stockModal.current - qty)
+                const clamped = stockMode === 'subtract' && qty > stockModal.current
+                return (
+                  <div className="mt-2 text-center space-y-0.5">
+                    <p className="text-xs text-gray-500">
+                      Nuevo total: <span className={`font-bold ${next === 0 ? 'text-red-400' : next <= 5 ? 'text-orange-400' : 'text-green-400'}`}>{next}</span>
+                    </p>
+                    {clamped && <p className="text-xs text-orange-400">El stock no puede ser negativo — quedará en 0</p>}
+                  </div>
+                )
+              })()}
             </div>
             <div className="flex gap-3">
               <button onClick={() => setStockModal(null)} className="flex-1 border border-white/10 text-gray-300 text-sm font-medium py-2.5 rounded-lg hover:bg-[#1E3557] transition-all duration-200">
                 Cancelar
               </button>
-              <button onClick={handleAddStock} disabled={stockSaving} className="flex-1 bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F] text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50 transition-all duration-200">
-                {stockSaving ? 'Guardando...' : '+ Agregar stock'}
+              <button onClick={handleAddStock} disabled={stockSaving}
+                className={`flex-1 text-sm font-semibold py-2.5 rounded-lg disabled:opacity-50 transition-all duration-200 ${
+                  stockMode === 'add'
+                    ? 'bg-[#D4AF37] hover:bg-[#B8860B] text-[#0F0F0F]'
+                    : 'bg-orange-600 hover:bg-orange-700 text-white'
+                }`}>
+                {stockSaving ? 'Guardando...' : stockMode === 'add' ? '+ Agregar stock' : '− Reducir stock'}
               </button>
             </div>
           </div>
