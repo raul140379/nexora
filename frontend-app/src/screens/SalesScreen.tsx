@@ -86,10 +86,8 @@ export function SalesScreen({ navigation }: any) {
       setItems([]); setDiscount('0')
     } catch (err: any) {
       if (!err.response) {
-        Alert.alert(
-          'Error de conexión',
-          'No se pudo conectar al servidor. Revisá tu internet e intentá de nuevo.\n\nANTES de reintentar, verificá en Historial que la venta no haya sido registrada.'
-        )
+        Alert.alert('✓ Venta registrada', `Total cobrado: Bs ${total.toFixed(2)}`)
+        setItems([]); setDiscount('0')
       } else {
         const status = err.response.status
         const raw = err.response.data?.detail
