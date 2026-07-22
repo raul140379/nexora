@@ -29,8 +29,7 @@ def create_product(
 ):
     if data.sku and product_repo.get_by_sku(db, data.sku):
         raise HTTPException(status_code=400, detail="Ya existe un producto con ese SKU")
-    product = product_repo.create_with_prices(db, data)
-    return product_repo.get_with_details(db, product.id)
+    return product_repo.create_with_prices(db, data)
 
 
 @router.get("/{product_id}", response_model=ProductResponse)
@@ -55,7 +54,7 @@ def update_product(
     prod = product_repo.update_with_prices(db, product_id, data)
     if not prod:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return product_repo.get_with_details(db, product_id)
+    return prod
 
 
 @router.delete("/{product_id}", status_code=204)
@@ -78,6 +77,22 @@ def delete_all_products(
         db.delete(p)
     db.commit()
     return {"deleted": len(products)}
+
+
+@router.patch("/{product_id}", response_model=ProductResponse)
+def patch_product(
+    product_id: int,
+    data: ProductUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    prod = db.query(product_repo.model).filter(product_repo.model.id == product_id).first()
+    if not prod:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(prod, field, value)
+    db.commit()
+    return product_repo.get_with_details(db, product_id)
 
 
 @router.patch("/prices/{pack_price_id}/stock")

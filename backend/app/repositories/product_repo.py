@@ -36,7 +36,6 @@ class ProductRepository(BaseRepository[Product, ProductCreate, ProductUpdate]):
             ))
 
     def create_with_prices(self, db: Session, data: ProductCreate) -> Product:
-        # precio base = price_a del primer empaque (Unidad) si existe
         base_price = data.price
         if data.prices:
             base_price = data.prices[0].price_a
@@ -54,8 +53,7 @@ class ProductRepository(BaseRepository[Product, ProductCreate, ProductUpdate]):
         db.flush()
         self._sync_prices(db, product, data.prices)
         db.commit()
-        db.refresh(product)
-        return product
+        return self.get_with_details(db, product.id)
 
     def update_with_prices(self, db: Session, product_id: int, data: ProductCreate):
         product = self.get(db, product_id)
@@ -76,8 +74,7 @@ class ProductRepository(BaseRepository[Product, ProductCreate, ProductUpdate]):
 
         self._sync_prices(db, product, data.prices)
         db.commit()
-        db.refresh(product)
-        return product
+        return self.get_with_details(db, product_id)
 
     def update_stock(self, db: Session, product_id: int, quantity_delta: int):
         product = self.get(db, product_id)

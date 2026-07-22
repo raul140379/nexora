@@ -63,7 +63,10 @@ def update_sale_status(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    sale = sale_repo.update(db, sale_id, data)
+    sale = sale_repo.get_with_items(db, sale_id)
     if not sale:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
-    return sale_repo.get_with_items(db, sale_id)
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(sale, field, value)
+    db.commit()
+    return sale

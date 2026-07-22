@@ -21,7 +21,10 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj = self.model(**data.model_dump(exclude_unset=False))
         db.add(obj)
         db.commit()
-        db.refresh(obj)
+        try:
+            db.refresh(obj)
+        except Exception:
+            pass
         return obj
 
     def update(self, db: Session, id: int, data: UpdateSchemaType) -> Optional[ModelType]:
