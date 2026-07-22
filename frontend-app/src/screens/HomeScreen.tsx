@@ -111,12 +111,12 @@ export function HomeScreen({ navigation }: any) {
               return (
                 <TouchableOpacity
                   key={item.label}
-                  style={[styles.menuItem, isAlone && styles.menuItemFull]}
+                  style={[styles.menuItem, { borderTopColor: item.color }, isAlone && styles.menuItemFull]}
                   onPress={() => navigation.navigate(item.screen)}
                   activeOpacity={0.75}
                 >
                   <View style={[styles.iconWrap, { backgroundColor: item.iconBg }]}>
-                    <Ionicons name={item.icon} size={22} color={item.color} />
+                    <Ionicons name={item.icon} size={18} color={item.color} />
                   </View>
                   <Text style={styles.menuText}>{item.label}</Text>
                 </TouchableOpacity>
@@ -150,9 +150,9 @@ const styles = StyleSheet.create({
   section:      { paddingHorizontal: 16, marginBottom: 4 },
   sectionTitle: { fontSize: 11, fontWeight: '800', color: '#D4AF37', marginBottom: 8, letterSpacing: 1.5, textTransform: 'uppercase' },
 
-  menuGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  menuItem:     { width: '47%', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 8, alignItems: 'center', backgroundColor: '#243D66', elevation: 2 },
+  menuGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
+  menuItem:     { width: '47%', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 6, alignItems: 'center', backgroundColor: '#243D66', borderTopWidth: 3, elevation: 2 },
   menuItemFull: { width: '100%' },
-  iconWrap:     { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  menuText:     { color: '#cbd5e1', fontSize: 12, fontWeight: '600', textAlign: 'center' },
+  iconWrap:     { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  menuText:     { color: '#cbd5e1', fontSize: 11, fontWeight: '600', textAlign: 'center' },
 })
