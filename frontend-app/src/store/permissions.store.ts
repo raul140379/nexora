@@ -13,11 +13,18 @@ export const usePermissionsStore = create<PermissionsState>((set, get) => ({
   perms: {},
   loaded: false,
   load: async () => {
-    try {
-      const { data } = await api.get<Record<string, boolean>>('/permissions/me')
-      set({ perms: data, loaded: true })
-    } catch {
-      set({ loaded: true })
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const { data } = await api.get<Record<string, boolean>>('/permissions/me')
+        set({ perms: data, loaded: true })
+        return
+      } catch (e: any) {
+        if (attempt === 2 || e.response) {
+          set({ loaded: true })
+          return
+        }
+        await new Promise(r => setTimeout(r, 600))
+      }
     }
   },
   clear: () => set({ perms: {}, loaded: false }),

@@ -6,6 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { authApi } from '../services/auth.api'
 import { useAuthStore } from '../store/auth.store'
+import { usePermissionsStore } from '../store/permissions.store'
 
 export function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('')
@@ -13,6 +14,7 @@ export function LoginScreen({ navigation }: any) {
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const { setTokens, setUser } = useAuthStore()
+  const { load: loadPermissions } = usePermissionsStore()
 
   const handleLogin = async () => {
     if (!email || !password) { Alert.alert('Error', 'Completá todos los campos'); return }
@@ -24,6 +26,7 @@ export function LoginScreen({ navigation }: any) {
       setTokens(res.access_token, res.refresh_token)
       const user = await authApi.getCurrentUser()
       setUser(user)
+      await loadPermissions()
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.detail || 'Email o contraseña incorrectos')
     } finally {

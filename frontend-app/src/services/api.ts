@@ -2,7 +2,7 @@ import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useAuthStore } from '../store/auth.store'
 
-export const API_URL = 'https://nexora-production-5740.up.railway.app/api/v1'
+export const API_URL = 'https://api-nexora.radosoft.tecnologia.bo/api/v1'
 
 export const api = axios.create({ baseURL: API_URL })
 
