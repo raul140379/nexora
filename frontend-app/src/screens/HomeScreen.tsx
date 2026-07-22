@@ -15,6 +15,7 @@ interface MenuItem {
   show: boolean
   icon: IoniconsName
   color: string
+  iconBg: string
 }
 
 const SECTIONS: { title: string; keys: string[] }[] = [
@@ -52,15 +53,15 @@ export function HomeScreen({ navigation }: any) {
   ]
 
   const allItems: Record<string, Omit<MenuItem, 'label'>> = {
-    'Nueva venta':   { screen: 'Sales',          show: has('create_sales'),        icon: 'add-circle-outline',        color: '#1d4ed8' },
-    'Historial':     { screen: 'SalesHistory',   show: true,                        icon: 'time-outline',              color: '#6d28d9' },
-    'Reportes':      { screen: 'Reports',        show: has('view_reports'),         icon: 'bar-chart-outline',         color: '#064e3b' },
-    'Productos':     { screen: 'Products',       show: true,                        icon: 'cube-outline',              color: '#0e7490' },
-    'Categorías':    { screen: 'Categories',     show: has('manage_categories'),    icon: 'grid-outline',              color: '#92400e' },
-    'Clientes':      { screen: 'Customers',      show: has('view_customers'),       icon: 'people-outline',            color: '#065f46' },
-    'Usuarios':      { screen: 'Users',          show: role === 'admin',            icon: 'person-outline',            color: '#7c3aed' },
-    'Permisos':      { screen: 'Permissions',    show: role === 'admin',            icon: 'shield-checkmark-outline',  color: '#9f1239' },
-    'Mi contraseña': { screen: 'ChangePassword', show: true,                        icon: 'lock-closed-outline',       color: '#0f4c75' },
+    'Nueva venta':   { screen: 'Sales',          show: has('create_sales'),        icon: 'add-circle-outline',        color: '#60a5fa', iconBg: 'rgba(96,165,250,0.18)' },
+    'Historial':     { screen: 'SalesHistory',   show: true,                        icon: 'time-outline',              color: '#a78bfa', iconBg: 'rgba(167,139,250,0.18)' },
+    'Reportes':      { screen: 'Reports',        show: has('view_reports'),         icon: 'bar-chart-outline',         color: '#34d399', iconBg: 'rgba(52,211,153,0.18)'  },
+    'Productos':     { screen: 'Products',       show: true,                        icon: 'cube-outline',              color: '#22d3ee', iconBg: 'rgba(34,211,238,0.18)'  },
+    'Categorías':    { screen: 'Categories',     show: has('manage_categories'),    icon: 'grid-outline',              color: '#fb923c', iconBg: 'rgba(251,146,60,0.18)'  },
+    'Clientes':      { screen: 'Customers',      show: has('view_customers'),       icon: 'people-outline',            color: '#4ade80', iconBg: 'rgba(74,222,128,0.18)'  },
+    'Usuarios':      { screen: 'Users',          show: role === 'admin',            icon: 'person-outline',            color: '#c084fc', iconBg: 'rgba(192,132,252,0.18)' },
+    'Permisos':      { screen: 'Permissions',    show: role === 'admin',            icon: 'shield-checkmark-outline',  color: '#f87171', iconBg: 'rgba(248,113,113,0.18)' },
+    'Mi contraseña': { screen: 'ChangePassword', show: true,                        icon: 'lock-closed-outline',       color: '#38bdf8', iconBg: 'rgba(56,189,248,0.18)'  },
   }
 
   const visibleSections = SECTIONS.map(s => ({
@@ -110,12 +111,12 @@ export function HomeScreen({ navigation }: any) {
               return (
                 <TouchableOpacity
                   key={item.label}
-                  style={[styles.menuItem, { backgroundColor: item.color }, isAlone && styles.menuItemFull]}
+                  style={[styles.menuItem, isAlone && styles.menuItemFull]}
                   onPress={() => navigation.navigate(item.screen)}
                   activeOpacity={0.75}
                 >
-                  <View style={styles.iconWrap}>
-                    <Ionicons name={item.icon} size={28} color="#fff" />
+                  <View style={[styles.iconWrap, { backgroundColor: item.iconBg }]}>
+                    <Ionicons name={item.icon} size={22} color={item.color} />
                   </View>
                   <Text style={styles.menuText}>{item.label}</Text>
                 </TouchableOpacity>
@@ -149,9 +150,9 @@ const styles = StyleSheet.create({
   section:      { paddingHorizontal: 16, marginBottom: 4 },
   sectionTitle: { fontSize: 11, fontWeight: '800', color: '#D4AF37', marginBottom: 8, letterSpacing: 1.5, textTransform: 'uppercase' },
 
-  menuGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  menuItem:     { width: '47%', borderRadius: 14, paddingVertical: 22, paddingHorizontal: 10, alignItems: 'center', elevation: 3 },
+  menuGrid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  menuItem:     { width: '47%', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 8, alignItems: 'center', backgroundColor: '#243D66', elevation: 2 },
   menuItemFull: { width: '100%' },
-  iconWrap:     { width: 48, height: 48, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  menuText:     { color: '#fff', fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  iconWrap:     { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  menuText:     { color: '#cbd5e1', fontSize: 12, fontWeight: '600', textAlign: 'center' },
 })
