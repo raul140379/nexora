@@ -7,10 +7,12 @@ from app.schemas.permission import DEFAULT_PERMISSIONS, PERMISSION_CATALOG
 def seed_defaults(db: Session) -> None:
     for role, perms in DEFAULT_PERMISSIONS.items():
         for key, allowed in perms.items():
-            exists = db.query(RolePermission).filter(
+            row = db.query(RolePermission).filter(
                 RolePermission.role == role, RolePermission.key == key
             ).first()
-            if not exists:
+            if row:
+                row.allowed = allowed
+            else:
                 db.add(RolePermission(role=role, key=key, allowed=allowed))
     db.commit()
 
