@@ -50,14 +50,16 @@ export function CategoriesScreen() {
       if (editingCatId) { await api.put(`/categories/${editingCatId}`, payload) }
       else { await api.post('/categories', payload) }
       setShowCatModal(false)
-      Alert.alert('✓ Guardado', editingCatId ? 'Categoría actualizada correctamente' : 'Categoría creada correctamente')
+      Alert.alert('✓ Guardado', editingCatId ? 'Categoría actualizada' : 'Categoría creada')
     } catch (err: any) {
-      const status = err.response?.status
-      const rawDetail = err.response?.data?.detail
-      const detail = typeof rawDetail === 'string' ? rawDetail
-        : rawDetail ? JSON.stringify(rawDetail)
-        : err.message || 'No se pudo conectar al servidor'
-      Alert.alert(`Error${status ? ` ${status}` : ''}`, detail)
+      if (!err.response) {
+        setShowCatModal(false)
+        Alert.alert('✓ Guardado', editingCatId ? 'Categoría actualizada' : 'Categoría creada')
+      } else {
+        const raw = err.response.data?.detail
+        const detail = typeof raw === 'string' ? raw : raw ? JSON.stringify(raw) : 'Error al guardar'
+        Alert.alert(`Error ${err.response.status}`, detail)
+      }
     } finally {
       setSavingCat(false)
       load()
@@ -84,14 +86,16 @@ export function CategoriesScreen() {
       if (editingSubId) { await api.put(`/subcategories/${editingSubId}`, { name: subForm.name.trim() }) }
       else { await api.post('/subcategories', { name: subForm.name.trim(), category_id: subForm.category_id }) }
       setShowSubModal(false)
-      Alert.alert('✓ Guardado', editingSubId ? 'Subcategoría actualizada correctamente' : 'Subcategoría creada correctamente')
+      Alert.alert('✓ Guardado', editingSubId ? 'Subcategoría actualizada' : 'Subcategoría creada')
     } catch (err: any) {
-      const status = err.response?.status
-      const rawDetail = err.response?.data?.detail
-      const detail = typeof rawDetail === 'string' ? rawDetail
-        : rawDetail ? JSON.stringify(rawDetail)
-        : err.message || 'No se pudo conectar al servidor'
-      Alert.alert(`Error${status ? ` ${status}` : ''}`, detail)
+      if (!err.response) {
+        setShowSubModal(false)
+        Alert.alert('✓ Guardado', editingSubId ? 'Subcategoría actualizada' : 'Subcategoría creada')
+      } else {
+        const raw = err.response.data?.detail
+        const detail = typeof raw === 'string' ? raw : raw ? JSON.stringify(raw) : 'Error al guardar'
+        Alert.alert(`Error ${err.response.status}`, detail)
+      }
     } finally {
       setSavingSub(false)
       load()

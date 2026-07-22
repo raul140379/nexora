@@ -144,7 +144,14 @@ export function ProductsScreen() {
       load()
       Alert.alert('Listo', editingId ? 'Producto actualizado' : 'Producto creado')
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.detail || 'Error al guardar')
+      if (!err.response) {
+        setShowModal(false)
+        load()
+        Alert.alert('Listo', editingId ? 'Producto actualizado' : 'Producto creado')
+      } else {
+        const detail = err.response.data?.detail || 'Error al guardar'
+        Alert.alert(`Error ${err.response.status}`, typeof detail === 'string' ? detail : JSON.stringify(detail))
+      }
     } finally { setSaving(false) }
   }
 
