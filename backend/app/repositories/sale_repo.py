@@ -26,7 +26,7 @@ class SaleRepository(BaseRepository[Sale, SaleCreate, SaleUpdate]):
 
     def create_with_items(self, db: Session, data: SaleCreate, user_id: int) -> Sale:
         subtotal = sum(item.unit_price * item.quantity for item in data.items)
-        discount = data.discount_pct  # already Decimal with default Decimal("0")
+        discount = data.discount_pct
         total = subtotal * (1 - discount / 100)
 
         sale = Sale(
@@ -39,6 +39,7 @@ class SaleRepository(BaseRepository[Sale, SaleCreate, SaleUpdate]):
         db.add(sale)
         db.flush()
 
+        created_items = []
         for item_data in data.items:
             item = SaleItem(
                 sale_id=sale.id,
@@ -50,13 +51,14 @@ class SaleRepository(BaseRepository[Sale, SaleCreate, SaleUpdate]):
                 subtotal=item_data.unit_price * item_data.quantity,
             )
             db.add(item)
-            # Descontar stock de la presentación específica
+            created_items.append(item)
             pp = db.query(ProductPrice).filter(ProductPrice.id == item_data.pack_price_id).first()
             if pp:
                 pp.stock = max(0, pp.stock - item_data.quantity)
 
         db.commit()
-        db.refresh(sale)
+        # Populate the relationship in-memory to avoid a second SELECT
+        sale.items = created_items
         return sale
 
 

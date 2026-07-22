@@ -41,8 +41,7 @@ def create_sale(
                 detail=f"Stock insuficiente para '{pp.pack_name}': disponible {pp.stock}",
             )
 
-    sale = sale_repo.create_with_items(db, data, current_user.id)
-    return sale_repo.get_with_items(db, sale.id)
+    return sale_repo.create_with_items(db, data, current_user.id)
 
 
 @router.get("/{sale_id}", response_model=SaleResponse)
