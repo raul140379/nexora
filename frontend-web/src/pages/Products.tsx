@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../services/api'
 import { Pagination } from '../components/ui'
+import { LabelPrint } from '../components/LabelPrint'
 import toast from 'react-hot-toast'
 
 // ── Interfaces ───────────────────────────────────────────────────────────────
@@ -171,6 +172,7 @@ export function Products() {
   const [deleteModal, setDeleteModal] = useState<{ id: number; name: string } | 'all' | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [labelProduct, setLabelProduct] = useState<Product | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -712,6 +714,15 @@ export function Products() {
                             </svg>
                           </button>
                         </Tip>
+                        <Tip label="Imprimir etiqueta QR">
+                          <button
+                            onClick={() => setLabelProduct(p)}
+                            aria-label="Imprimir etiqueta QR"
+                            className="p-2 rounded-lg text-gray-500 hover:text-cyan-400 hover:bg-cyan-900/20 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+                          >
+                            <IcoBarcode />
+                          </button>
+                        </Tip>
                         <Tip label="Eliminar producto">
                           <button
                             onClick={() => setDeleteModal({ id: p.id, name: p.name })}
@@ -1009,6 +1020,11 @@ export function Products() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Etiqueta QR */}
+      {labelProduct && (
+        <LabelPrint product={labelProduct} onClose={() => setLabelProduct(null)} />
       )}
 
     </div>

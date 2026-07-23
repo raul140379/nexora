@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
+import QRCode from 'react-native-qrcode-svg'
 import { api } from '../services/api'
 import { usePermissionsStore } from '../store/permissions.store'
 import { getNameEmoji } from '../utils/helpers'
@@ -44,6 +45,7 @@ export function ProductsScreen() {
   const [stockQty, setStockQty] = useState('1')
   const [stockSaving, setStockSaving] = useState(false)
 
+  const [qrProduct, setQrProduct] = useState<Product | null>(null)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [cameraPermission, requestCameraPermission] = useCameraPermissions()
 
@@ -286,16 +288,19 @@ export function ProductsScreen() {
                   )}
                   {p.description && <Text style={styles.description}>{p.description}</Text>}
                 </View>
-                {canEdit && (
-                  <View style={styles.cardActions}>
+                <View style={styles.cardActions}>
+                  <TouchableOpacity style={styles.qrBtn} onPress={() => setQrProduct(p)}>
+                    <Text style={styles.qrBtnText}>QR</Text>
+                  </TouchableOpacity>
+                  {canEdit && (<>
                     <TouchableOpacity style={styles.editBtn} onPress={() => openEdit(p)}>
                       <Text style={styles.editBtnText}>Editar</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.delBtn} onPress={() => handleDelete(p)}>
                       <Text style={styles.delBtnText}>×</Text>
                     </TouchableOpacity>
-                  </View>
-                )}
+                  </>)}
+                </View>
               </View>
 
               {p.prices.map(pr => (
@@ -500,6 +505,33 @@ export function ProductsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal QR del producto */}
+      <Modal visible={!!qrProduct} animationType="fade" transparent onRequestClose={() => setQrProduct(null)}>
+        <View style={[styles.overlay, { justifyContent: 'center' }]}>
+          <View style={styles.qrBox}>
+            <Text style={styles.qrTitle} numberOfLines={2}>{qrProduct?.name}</Text>
+            {qrProduct?.sku && <Text style={styles.qrCode}>{qrProduct.sku}</Text>}
+            <View style={styles.qrWrap}>
+              {qrProduct && (
+                <QRCode
+                  value={JSON.stringify({ id: qrProduct.id, sku: qrProduct.sku || '', name: qrProduct.name })}
+                  size={200}
+                  color="#0F1C2E"
+                  backgroundColor="#ffffff"
+                />
+              )}
+            </View>
+            {qrProduct?.description && (
+              <Text style={styles.qrDesc}>{qrProduct.description}</Text>
+            )}
+            <TouchableOpacity style={styles.qrClose} onPress={() => setQrProduct(null)}>
+              <Text style={styles.qrCloseText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   )
 }
@@ -519,10 +551,19 @@ const styles = StyleSheet.create({
   sku:           { fontSize: 11, color: '#64748b', marginTop: 2 },
   category:      { fontSize: 11, color: '#94a3b8', marginTop: 1 },
   cardActions:   { flexDirection: 'row', gap: 6 },
+  qrBtn:         { backgroundColor: 'rgba(34,211,238,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(34,211,238,0.3)' },
+  qrBtnText:     { fontSize: 12, color: '#22d3ee', fontWeight: '700' },
   editBtn:       { backgroundColor: 'rgba(212,175,55,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)' },
   editBtnText:   { fontSize: 12, color: '#D4AF37', fontWeight: '600' },
   delBtn:        { backgroundColor: 'rgba(239,68,68,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)' },
   delBtnText:    { fontSize: 16, color: '#ef4444', fontWeight: '700' },
+  qrBox:         { backgroundColor: '#1E3557', borderRadius: 20, padding: 28, margin: 24, alignItems: 'center' },
+  qrTitle:       { fontSize: 16, fontWeight: '700', color: '#f1f5f9', textAlign: 'center', marginBottom: 4 },
+  qrCode:        { fontSize: 12, color: '#64748b', marginBottom: 20, fontFamily: 'monospace' },
+  qrWrap:        { backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 16 },
+  qrDesc:        { fontSize: 12, color: '#64748b', textAlign: 'center', marginBottom: 16, fontStyle: 'italic' },
+  qrClose:       { backgroundColor: '#243D66', paddingHorizontal: 32, paddingVertical: 10, borderRadius: 10, marginTop: 4 },
+  qrCloseText:   { color: '#cbd5e1', fontSize: 14, fontWeight: '600' },
   priceRow:      { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', flexWrap: 'wrap' },
   packName:      { fontSize: 12, fontWeight: '600', color: '#cbd5e1', width: 75 },
   price:         { fontSize: 12, fontWeight: '600' },
