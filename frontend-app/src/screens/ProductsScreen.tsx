@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import {
   View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
-  Modal, ScrollView, Alert, ActivityIndicator
+  Modal, ScrollView, Alert, ActivityIndicator, Platform, PermissionsAndroid
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
@@ -51,10 +51,30 @@ export function ProductsScreen() {
   const [scannerOpen, setScannerOpen] = useState(false)
   const [cameraPermission, requestCameraPermission] = useCameraPermissions()
 
+  const requestBtPermissions = async (): Promise<boolean> => {
+    if (Platform.OS !== 'android') return true
+    if ((Platform.Version as number) >= 31) {
+      const res = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+      ])
+      return res['android.permission.BLUETOOTH_CONNECT'] === 'granted' &&
+             res['android.permission.BLUETOOTH_SCAN'] === 'granted'
+    } else {
+      const res = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
+      return res === 'granted'
+    }
+  }
+
   const handleBluetoothPrint = async () => {
     if (!qrProduct) return
     setPrinting(true)
     try {
+      const granted = await requestBtPermissions()
+      if (!granted) {
+        Alert.alert('Permiso denegado', 'Se necesita permiso Bluetooth para imprimir')
+        return
+      }
       const enabled = await BluetoothManager.isBluetoothEnabled()
       if (!enabled) await BluetoothManager.enableBluetooth()
 
