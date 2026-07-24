@@ -6,6 +6,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import QRCode from 'react-native-qrcode-svg'
+import { BluetoothManager, BluetoothEscposPrinter } from 'react-native-bluetooth-escpos-printer'
 import { api } from '../services/api'
 import { usePermissionsStore } from '../store/permissions.store'
 import { getNameEmoji } from '../utils/helpers'
@@ -46,8 +47,57 @@ export function ProductsScreen() {
   const [stockSaving, setStockSaving] = useState(false)
 
   const [qrProduct, setQrProduct] = useState<Product | null>(null)
+  const [printing, setPrinting] = useState(false)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [cameraPermission, requestCameraPermission] = useCameraPermissions()
+
+  const handleBluetoothPrint = async () => {
+    if (!qrProduct) return
+    setPrinting(true)
+    try {
+      const enabled = await BluetoothManager.isBluetoothEnabled()
+      if (!enabled) await BluetoothManager.enableBluetooth()
+
+      const r = await BluetoothManager.scanDevices()
+      const paired: Array<{ name: string; address: string }> = JSON.parse((r as any)?.paired || '[]')
+      const printer = paired.find(d =>
+        d.name?.toLowerCase().includes('t-im') ||
+        d.name?.toLowerCase().includes('tomate') ||
+        d.name?.toLowerCase().includes('ims')
+      )
+      if (!printer) {
+        Alert.alert('Impresora no encontrada', 'Asegurate de que la Tomate esté encendida y emparejada con el celular')
+        return
+      }
+
+      await BluetoothManager.connect(printer.address)
+
+      const code = qrProduct.sku || `P${String(qrProduct.id).padStart(5, '0')}`
+      const price = qrProduct.prices.find(p => p.pack_name.toLowerCase() === 'unidad')?.price_a ?? qrProduct.prices[0]?.price_a ?? 0
+      const qrData = JSON.stringify({ id: qrProduct.id, sku: qrProduct.sku || '', name: qrProduct.name })
+
+      await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
+      await BluetoothEscposPrinter.printText('EL PATRON SHOP\n', { fonttype: 1 })
+      await BluetoothEscposPrinter.printText('--------------------------------\n', {})
+      await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
+      await BluetoothEscposPrinter.printText(`${qrProduct.name.substring(0, 32)}\n`, {})
+      if (qrProduct.description) {
+        await BluetoothEscposPrinter.printText(`${qrProduct.description.substring(0, 48)}\n`, {})
+      }
+      await BluetoothEscposPrinter.printText(`Cod: ${code}\n`, {})
+      await BluetoothEscposPrinter.printText(`Bs ${Number(price).toFixed(2)}\n`, { fonttype: 1 })
+      await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
+      await BluetoothEscposPrinter.printQRCode(qrData, 200, BluetoothEscposPrinter.ERROR_CORRECTION.L)
+      await BluetoothEscposPrinter.printBarCode(code, BluetoothEscposPrinter.BARCODETYPE.CODE128, 2, 50, 0, 2)
+      await BluetoothEscposPrinter.printText('\n\n\n', {})
+
+      Alert.alert('Impreso', 'Etiqueta enviada a la impresora')
+    } catch (e: any) {
+      Alert.alert('Error de impresión', e?.message || 'No se pudo conectar a la impresora')
+    } finally {
+      setPrinting(false)
+    }
+  }
 
   const generateSku = () => {
     const cat = categories.find(c => String(c.id) === form.category_id)
@@ -525,6 +575,16 @@ export function ProductsScreen() {
             {qrProduct?.description && (
               <Text style={styles.qrDesc}>{qrProduct.description}</Text>
             )}
+            <TouchableOpacity
+              style={[styles.printBtn, printing && { opacity: 0.6 }]}
+              onPress={handleBluetoothPrint}
+              disabled={printing}
+            >
+              {printing
+                ? <ActivityIndicator color="#0F0F0F" size="small" />
+                : <Text style={styles.printBtnText}>Imprimir Bluetooth</Text>
+              }
+            </TouchableOpacity>
             <TouchableOpacity style={styles.qrClose} onPress={() => setQrProduct(null)}>
               <Text style={styles.qrCloseText}>Cerrar</Text>
             </TouchableOpacity>
@@ -562,6 +622,8 @@ const styles = StyleSheet.create({
   qrCode:        { fontSize: 12, color: '#64748b', marginBottom: 20, fontFamily: 'monospace' },
   qrWrap:        { backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 16 },
   qrDesc:        { fontSize: 12, color: '#64748b', textAlign: 'center', marginBottom: 16, fontStyle: 'italic' },
+  printBtn:      { backgroundColor: '#D4AF37', paddingHorizontal: 32, paddingVertical: 12, borderRadius: 10, marginBottom: 10, width: '100%', alignItems: 'center' },
+  printBtnText:  { color: '#0F0F0F', fontSize: 14, fontWeight: '700' },
   qrClose:       { backgroundColor: '#243D66', paddingHorizontal: 32, paddingVertical: 10, borderRadius: 10, marginTop: 4 },
   qrCloseText:   { color: '#cbd5e1', fontSize: 14, fontWeight: '600' },
   priceRow:      { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', flexWrap: 'wrap' },
