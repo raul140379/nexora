@@ -116,18 +116,27 @@ export function ProductsScreen() {
       const price = qrProduct.prices.find(p => p.pack_name.toLowerCase() === 'unidad')?.price_a ?? qrProduct.prices[0]?.price_a ?? 0
       const qrData = JSON.stringify({ id: qrProduct.id, sku: qrProduct.sku || '', name: qrProduct.name })
 
-      await BluetoothEscposPrinter.printerInit()
-      await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
-      await BluetoothEscposPrinter.printText('EL PATRON SHOP\n', { codepage: 8 })
-      await BluetoothEscposPrinter.printText('----------------------------\n', { codepage: 8 })
-      await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
-      await BluetoothEscposPrinter.printText(`${qrProduct.name.substring(0, 32)}\n`, { codepage: 8 })
-      if (qrProduct.description) {
-        await BluetoothEscposPrinter.printText(`${qrProduct.description.substring(0, 48)}\n`, { codepage: 8 })
-      }
-      await BluetoothEscposPrinter.printText(`Cod: ${code}\n`, { codepage: 8 })
-      await BluetoothEscposPrinter.printText(`Bs ${Number(price).toFixed(2)}\n`, { codepage: 8 })
-      await BluetoothEscposPrinter.printText('\n\n\n', { codepage: 8 })
+      const bt = BluetoothEscposPrinter as any
+      const tspl = async (line: string) => { await bt.writeText(line) }
+
+      const name20 = qrProduct.name.substring(0, 20).replace(/"/g, "'")
+      const priceFmt = `Bs ${Number(price).toFixed(2)}`
+
+      // Printer-specific init packet
+      await bt.writeHex('03 1c 5a 4a 0d')
+
+      await tspl(`SIZE 48 mm,30 mm\r\n`)
+      await tspl(`GAP 2 mm,0 mm\r\n`)
+      await tspl(`DIRECTION 0,0\r\n`)
+      await tspl(`DENSITY 8\r\n`)
+      await tspl(`SPEED 4.0\r\n`)
+      await tspl(`CLS\r\n`)
+      await tspl(`TEXT 10,5,"3",0,1,1,"EL PATRON SHOP"\r\n`)
+      await tspl(`TEXT 10,38,"2",0,1,1,"${name20}"\r\n`)
+      await tspl(`TEXT 10,65,"1",0,1,1,"Cod: ${code}"\r\n`)
+      await tspl(`TEXT 10,82,"3",0,1,1,"${priceFmt}"\r\n`)
+      await tspl(`QRCODE 280,5,L,2,A,0,"${qrData}"\r\n`)
+      await tspl(`PRINT 1,1\r\n`)
 
       Alert.alert('Impreso', 'Etiqueta enviada a la impresora')
     } catch (e: any) {

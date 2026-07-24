@@ -88,3 +88,46 @@ index dd5d33e..bcdf209 100644
  import android.util.Log;
  import android.widget.Toast;
  import com.facebook.react.bridge.*;
+diff --git a/node_modules/react-native-bluetooth-escpos-printer/android/src/main/java/cn/jystudio/bluetooth/escpos/RNBluetoothEscposPrinterModule.java b/node_modules/react-native-bluetooth-escpos-printer/android/src/main/java/cn/jystudio/bluetooth/escpos/RNBluetoothEscposPrinterModule.java
+index 3fa7409..6344360 100644
+--- a/node_modules/react-native-bluetooth-escpos-printer/android/src/main/java/cn/jystudio/bluetooth/escpos/RNBluetoothEscposPrinterModule.java
++++ b/node_modules/react-native-bluetooth-escpos-printer/android/src/main/java/cn/jystudio/bluetooth/escpos/RNBluetoothEscposPrinterModule.java
+@@ -360,6 +360,38 @@ public class RNBluetoothEscposPrinterModule extends ReactContextBaseJavaModule
+         }
+     }
+ 
++    @ReactMethod
++    public void writeText(String text, final Promise promise) {
++        try {
++            byte[] data = text.getBytes("ASCII");
++            if (sendDataByte(data)) {
++                promise.resolve(null);
++            } else {
++                promise.reject("COMMAND_NOT_SEND");
++            }
++        } catch (Exception e) {
++            promise.reject(e.getMessage(), e);
++        }
++    }
++
++    @ReactMethod
++    public void writeHex(String hexString, final Promise promise) {
++        try {
++            String[] parts = hexString.trim().split("\\s+");
++            byte[] data = new byte[parts.length];
++            for (int i = 0; i < parts.length; i++) {
++                data[i] = (byte) Integer.parseInt(parts[i].trim(), 16);
++            }
++            if (sendDataByte(data)) {
++                promise.resolve(null);
++            } else {
++                promise.reject("COMMAND_NOT_SEND");
++            }
++        } catch (Exception e) {
++            promise.reject(e.getMessage(), e);
++        }
++    }
++
+     /**
+      * Rotate 90 degree, 0-no rotate, 1-rotate
+      * @param rotate  0-no rotate, 1-rotate
