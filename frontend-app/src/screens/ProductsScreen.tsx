@@ -49,6 +49,7 @@ export function ProductsScreen() {
 
   const [qrProduct, setQrProduct] = useState<Product | null>(null)
   const [printing, setPrinting] = useState(false)
+  const [labelSize, setLabelSize] = useState<'50x24' | '30x25'>('50x24')
   const [scannerOpen, setScannerOpen] = useState(false)
   const [cameraPermission, requestCameraPermission] = useCameraPermissions()
 
@@ -113,29 +114,65 @@ export function ProductsScreen() {
       await BluetoothManager.connect(printerAddress)
 
       const code = qrProduct.sku || `P${String(qrProduct.id).padStart(5, '0')}`
-      const price = qrProduct.prices.find(p => p.pack_name.toLowerCase() === 'unidad')?.price_a ?? qrProduct.prices[0]?.price_a ?? 0
-      const qrData = JSON.stringify({ id: qrProduct.id, sku: qrProduct.sku || '', name: qrProduct.name })
+      const qrData = `${qrProduct.name}|${qrProduct.category?.name ?? ''}|${code}`
 
       const bt = BluetoothEscposPrinter as any
       const tspl = async (line: string) => { await bt.writeText(line) }
 
-      const name20 = qrProduct.name.substring(0, 20).replace(/"/g, "'")
-      const priceFmt = `Bs ${Number(price).toFixed(2)}`
+      const LATIN: Record<string, string> = {
+        'á':'a','à':'a','ä':'a','â':'a','Á':'A','À':'A','Ä':'A','Â':'A',
+        'é':'e','è':'e','ë':'e','ê':'e','É':'E','È':'E','Ë':'E','Ê':'E',
+        'í':'i','ì':'i','ï':'i','î':'i','Í':'I','Ì':'I','Ï':'I','Î':'I',
+        'ó':'o','ò':'o','ö':'o','ô':'o','Ó':'O','Ò':'O','Ö':'O','Ô':'O',
+        'ú':'u','ù':'u','ü':'u','û':'u','Ú':'U','Ù':'U','Ü':'U','Û':'U',
+        'ñ':'n','Ñ':'N',
+      }
+      const toAscii = (s: string) => s.split('').map(c => LATIN[c] ?? c).filter(c => c.charCodeAt(0) < 128).join('')
+      const name28 = toAscii(qrProduct.name).substring(0, 28).replace(/"/g, "'")
+      const category = toAscii(qrProduct.category?.name ?? '').substring(0, 28).replace(/"/g, "'")
 
-      // Printer-specific init packet
       await bt.writeHex('03 1c 5a 4a 0d')
 
-      await tspl(`SIZE 48 mm,30 mm\r\n`)
-      await tspl(`GAP 2 mm,0 mm\r\n`)
-      await tspl(`DIRECTION 0,0\r\n`)
-      await tspl(`DENSITY 8\r\n`)
-      await tspl(`SPEED 4.0\r\n`)
-      await tspl(`CLS\r\n`)
-      await tspl(`TEXT 10,5,"3",0,1,1,"EL PATRON SHOP"\r\n`)
-      await tspl(`TEXT 10,38,"2",0,1,1,"${name20}"\r\n`)
-      await tspl(`TEXT 10,65,"1",0,1,1,"Cod: ${code}"\r\n`)
-      await tspl(`TEXT 10,82,"3",0,1,1,"${priceFmt}"\r\n`)
-      await tspl(`QRCODE 280,5,L,2,A,0,"${qrData}"\r\n`)
+      const isEan13 = /^\d{13}$/.test(code)
+
+      if (labelSize === '50x24') {
+        // 50x24mm: 400×192 dots — texto+barcode izq, QR der (size 4 = 116×116 dots)
+        await tspl(`SIZE 50 mm,24 mm\r\n`)
+        await tspl(`GAP 2 mm,0 mm\r\n`)
+        await tspl(`DIRECTION 0,0\r\n`)
+        await tspl(`DENSITY 8\r\n`)
+        await tspl(`SPEED 4.0\r\n`)
+        await tspl(`CODEPAGE UTF-8\r\n`)
+        await tspl(`CLS\r\n`)
+        await tspl(`TEXT 5,5,"2",0,1,1,"EL PATRON SHOP"\r\n`)
+        await tspl(`TEXT 5,40,"1",0,2,1,"${category}"\r\n`)
+        await tspl(`TEXT 5,68,"1",0,2,1,"${name28}"\r\n`)
+        await tspl(`TEXT 5,96,"1",0,1,1,"Cod: ${code}"\r\n`)
+        if (isEan13) {
+          await tspl(`BARCODE 5,118,"EAN13",50,0,0,2,4,"${code}"\r\n`)
+        } else {
+          await tspl(`BARCODE 5,118,"128",50,0,0,1,2,"${code}"\r\n`)
+        }
+        await tspl(`QRCODE 248,10,L,4,A,0,"${qrData}"\r\n`)
+      } else {
+        // 30x25mm: 240×200 dots — texto+barcode arriba, QR abajo centrado
+        await tspl(`SIZE 30 mm,25 mm\r\n`)
+        await tspl(`GAP 2 mm,0 mm\r\n`)
+        await tspl(`DIRECTION 0,0\r\n`)
+        await tspl(`DENSITY 8\r\n`)
+        await tspl(`SPEED 4.0\r\n`)
+        await tspl(`CODEPAGE UTF-8\r\n`)
+        await tspl(`CLS\r\n`)
+        await tspl(`TEXT 5,5,"2",0,1,1,"EL PATRON SHOP"\r\n`)
+        await tspl(`TEXT 5,33,"1",0,1,1,"${category}"\r\n`)
+        await tspl(`TEXT 5,48,"1",0,1,1,"${name28}"\r\n`)
+        if (isEan13) {
+          await tspl(`BARCODE 5,65,"EAN13",30,0,0,2,4,"${code}"\r\n`)
+        } else {
+          await tspl(`BARCODE 5,65,"128",30,0,0,1,2,"${code}"\r\n`)
+        }
+        await tspl(`QRCODE 77,100,L,3,A,0,"${qrData}"\r\n`)
+      }
       await tspl(`PRINT 1,1\r\n`)
 
       Alert.alert('Impreso', 'Etiqueta enviada a la impresora')
@@ -622,6 +659,20 @@ export function ProductsScreen() {
             {qrProduct?.description && (
               <Text style={styles.qrDesc}>{qrProduct.description}</Text>
             )}
+            <View style={styles.labelSizeRow}>
+              <TouchableOpacity
+                style={[styles.sizeBtn, labelSize === '50x24' && styles.sizeBtnActive]}
+                onPress={() => setLabelSize('50x24')}
+              >
+                <Text style={[styles.sizeBtnText, labelSize === '50x24' && styles.sizeBtnTextActive]}>50×24 mm</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sizeBtn, labelSize === '30x25' && styles.sizeBtnActive]}
+                onPress={() => setLabelSize('30x25')}
+              >
+                <Text style={[styles.sizeBtnText, labelSize === '30x25' && styles.sizeBtnTextActive]}>30×25 mm</Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
               style={[styles.printBtn, printing && { opacity: 0.6 }]}
               onPress={handleBluetoothPrint}
@@ -671,8 +722,13 @@ const styles = StyleSheet.create({
   qrDesc:        { fontSize: 12, color: '#64748b', textAlign: 'center', marginBottom: 16, fontStyle: 'italic' },
   printBtn:      { backgroundColor: '#D4AF37', paddingHorizontal: 32, paddingVertical: 12, borderRadius: 10, marginBottom: 10, width: '100%', alignItems: 'center' },
   printBtnText:  { color: '#0F0F0F', fontSize: 14, fontWeight: '700' },
-  qrClose:       { backgroundColor: '#243D66', paddingHorizontal: 32, paddingVertical: 10, borderRadius: 10, marginTop: 4 },
-  qrCloseText:   { color: '#cbd5e1', fontSize: 14, fontWeight: '600' },
+  qrClose:         { backgroundColor: '#243D66', paddingHorizontal: 32, paddingVertical: 10, borderRadius: 10, marginTop: 4 },
+  qrCloseText:     { color: '#cbd5e1', fontSize: 14, fontWeight: '600' },
+  labelSizeRow:    { flexDirection: 'row', gap: 8, marginBottom: 12, width: '100%' },
+  sizeBtn:         { flex: 1, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#2d4a6e', alignItems: 'center' },
+  sizeBtnActive:   { backgroundColor: '#243D66', borderColor: '#D4AF37' },
+  sizeBtnText:     { color: '#64748b', fontSize: 13, fontWeight: '600' },
+  sizeBtnTextActive: { color: '#D4AF37' },
   priceRow:      { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', flexWrap: 'wrap' },
   packName:      { fontSize: 12, fontWeight: '600', color: '#cbd5e1', width: 75 },
   price:         { fontSize: 12, fontWeight: '600' },
