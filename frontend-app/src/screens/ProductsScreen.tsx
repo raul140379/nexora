@@ -118,7 +118,7 @@ export function ProductsScreen() {
 
       await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
       await BluetoothEscposPrinter.printText('EL PATRON SHOP\n', { fonttype: 1 })
-      await BluetoothEscposPrinter.printText('--------------------------------\n', {})
+      await BluetoothEscposPrinter.printText('----------------------------\n', {})
       await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
       await BluetoothEscposPrinter.printText(`${qrProduct.name.substring(0, 32)}\n`, {})
       if (qrProduct.description) {
@@ -126,9 +126,6 @@ export function ProductsScreen() {
       }
       await BluetoothEscposPrinter.printText(`Cod: ${code}\n`, {})
       await BluetoothEscposPrinter.printText(`Bs ${Number(price).toFixed(2)}\n`, { fonttype: 1 })
-      await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
-      await BluetoothEscposPrinter.printQRCode(qrData, 200, BluetoothEscposPrinter.ERROR_CORRECTION.L)
-      await BluetoothEscposPrinter.printBarCode(code, BluetoothEscposPrinter.BARCODETYPE.CODE128, 2, 50, 0, 2)
       await BluetoothEscposPrinter.printText('\n\n\n', {})
 
       Alert.alert('Impreso', 'Etiqueta enviada a la impresora')
