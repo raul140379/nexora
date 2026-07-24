@@ -116,17 +116,18 @@ export function ProductsScreen() {
       const price = qrProduct.prices.find(p => p.pack_name.toLowerCase() === 'unidad')?.price_a ?? qrProduct.prices[0]?.price_a ?? 0
       const qrData = JSON.stringify({ id: qrProduct.id, sku: qrProduct.sku || '', name: qrProduct.name })
 
+      await BluetoothEscposPrinter.printerInit()
       await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.CENTER)
-      await BluetoothEscposPrinter.printText('EL PATRON SHOP\n', { fonttype: 1 })
-      await BluetoothEscposPrinter.printText('----------------------------\n', {})
+      await BluetoothEscposPrinter.printText('EL PATRON SHOP\n', { codepage: 8 })
+      await BluetoothEscposPrinter.printText('----------------------------\n', { codepage: 8 })
       await BluetoothEscposPrinter.printerAlign(BluetoothEscposPrinter.ALIGN.LEFT)
-      await BluetoothEscposPrinter.printText(`${qrProduct.name.substring(0, 32)}\n`, {})
+      await BluetoothEscposPrinter.printText(`${qrProduct.name.substring(0, 32)}\n`, { codepage: 8 })
       if (qrProduct.description) {
-        await BluetoothEscposPrinter.printText(`${qrProduct.description.substring(0, 48)}\n`, {})
+        await BluetoothEscposPrinter.printText(`${qrProduct.description.substring(0, 48)}\n`, { codepage: 8 })
       }
-      await BluetoothEscposPrinter.printText(`Cod: ${code}\n`, {})
-      await BluetoothEscposPrinter.printText(`Bs ${Number(price).toFixed(2)}\n`, { fonttype: 1 })
-      await BluetoothEscposPrinter.printText('\n\n\n', {})
+      await BluetoothEscposPrinter.printText(`Cod: ${code}\n`, { codepage: 8 })
+      await BluetoothEscposPrinter.printText(`Bs ${Number(price).toFixed(2)}\n`, { codepage: 8 })
+      await BluetoothEscposPrinter.printText('\n\n\n', { codepage: 8 })
 
       Alert.alert('Impreso', 'Etiqueta enviada a la impresora')
     } catch (e: any) {
