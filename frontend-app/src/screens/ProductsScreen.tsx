@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react'
 import {
   View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity,
-  Modal, ScrollView, Alert, ActivityIndicator, Platform, PermissionsAndroid
+  Modal, ScrollView, Alert, ActivityIndicator, Platform, PermissionsAndroid,
+  DeviceEventEmitter
 } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 import { CameraView, useCameraPermissions } from 'expo-camera'
@@ -78,19 +79,38 @@ export function ProductsScreen() {
       const enabled = await BluetoothManager.isBluetoothEnabled()
       if (!enabled) await BluetoothManager.enableBluetooth()
 
-      const r = await BluetoothManager.scanDevices()
-      const paired: Array<{ name: string; address: string }> = JSON.parse((r as any)?.paired || '[]')
-      const printer = paired.find(d =>
-        d.name?.toLowerCase().includes('t-im') ||
-        d.name?.toLowerCase().includes('tomate') ||
-        d.name?.toLowerCase().includes('ims')
-      )
-      if (!printer) {
-        Alert.alert('Impresora no encontrada', 'Asegurate de que la Tomate esté encendida y emparejada con el celular')
+      // Captura dispositivos emparejados via evento (se emite antes que scanDevices falle)
+      let printerAddress: string | null = null
+      const sub = DeviceEventEmitter.addListener('EVENT_DEVICE_ALREADY_PAIRED', (data) => {
+        const devices: Array<{ name: string; address: string }> = JSON.parse(data.devices || '[]')
+        const found = devices.find(d =>
+          d.name?.toLowerCase().includes('t-im') ||
+          d.name?.toLowerCase().includes('tomate') ||
+          d.name?.toLowerCase().includes('ims')
+        )
+        if (found) printerAddress = found.address
+      })
+
+      try {
+        const r = await BluetoothManager.scanDevices()
+        const paired: Array<{ name: string; address: string }> = JSON.parse((r as any)?.paired || '[]')
+        const found = paired.find(d =>
+          d.name?.toLowerCase().includes('t-im') ||
+          d.name?.toLowerCase().includes('tomate') ||
+          d.name?.toLowerCase().includes('ims')
+        )
+        if (found) printerAddress = found.address
+      } catch {
+        await new Promise(r => setTimeout(r, 400))
+      }
+      sub.remove()
+
+      if (!printerAddress) {
+        Alert.alert('Impresora no encontrada', 'Verifica que la Tomate esté encendida y emparejada con el celular')
         return
       }
 
-      await BluetoothManager.connect(printer.address)
+      await BluetoothManager.connect(printerAddress)
 
       const code = qrProduct.sku || `P${String(qrProduct.id).padStart(5, '0')}`
       const price = qrProduct.prices.find(p => p.pack_name.toLowerCase() === 'unidad')?.price_a ?? qrProduct.prices[0]?.price_a ?? 0
